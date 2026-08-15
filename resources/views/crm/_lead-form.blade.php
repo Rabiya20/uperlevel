@@ -1,5 +1,6 @@
 @php
     $isAdmin = $isAdmin ?? false;
+    $canAssign = $canAssign ?? false;
 @endphp
 
 <div class="panel" style="max-width:640px;">
@@ -34,11 +35,7 @@
             <label class="f-label">Country</label>
             <input class="f-input" type="text" name="country" value="{{ old('country', $lead->country ?? '') }}" maxlength="60">
         </div>
-        <div>
-            <label class="f-label">Budget</label>
-            <input class="f-input" type="number" step="0.01" min="0" name="budget" value="{{ old('budget', $lead->budget ?? '') }}">
-        </div>
-        @if ($isAdmin)
+        @if ($canAssign)
             <div>
                 <label class="f-label">Assign to</label>
                 <select class="f-input" name="assigned_employee_id">
@@ -49,6 +46,21 @@
                 </select>
             </div>
         @endif
+        <div>
+            <label class="f-label">Budget</label>
+            <input class="f-input" type="number" step="0.01" min="0" name="budget" value="{{ old('budget', $lead->budget ?? '') }}">
+        </div>
+        <div style="margin-top:14px;">
+            <label class="f-label">Currency</label>
+            <select class="f-input" name="currency">
+                @foreach ($currencyOptions ?? ['USD'] as $code)
+                    @php $c = config("currencies.{$code}", ['name' => $code, 'symbol' => $code]); @endphp
+                    <option value="{{ $code }}" @selected(old('currency', $lead->currency ?? $currencyOptions[0] ?? 'USD') === $code)>{{ $code }} — {{ $c['name'] }} ({{ $c['symbol'] }})</option>
+                @endforeach
+            </select>
+            <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">Add more currencies under Finance → Setup → Currency.</p>
+        </div>
+        
         <div style="grid-column:1 / -1;">
             <label class="f-label">Description</label>
             <textarea class="f-input" name="description" rows="4" placeholder="Brief, requirements, anything worth capturing up front.">{{ old('description', $lead->description ?? '') }}</textarea>

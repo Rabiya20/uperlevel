@@ -55,7 +55,7 @@
         <div style="padding:32px 20px;text-align:center;color:var(--ink-soft);font-size:13.5px;">No invoices yet.</div>
     @else
         <table>
-            <tr><th>Number</th><th>Client</th><th>Issue Date</th><th>Due Date</th><th>Total</th><th>Balance Due</th><th>Status</th><th></th></tr>
+            <tr><th>Number</th><th>Client</th><th>Issue Date</th><th>Due Date</th><th>Currency</th><th>Total</th><th>Balance Due</th><th>Status</th><th></th></tr>
             @foreach ($invoices as $invoice)
                 @php $color = $statusColors[$invoice->status] ?? $statusColors['draft']; @endphp
                 <tr>
@@ -63,8 +63,9 @@
                     <td>{{ $invoice->client->name ?? '—' }}</td>
                     <td>{{ $invoice->issue_date->format('j M Y') }}</td>
                     <td>{{ $invoice->due_date->format('j M Y') }}</td>
-                    <td>{{ number_format((float) $invoice->total, 2) }}</td>
-                    <td>{{ $invoice->status === 'cancelled' ? '—' : number_format($invoice->balanceDue(), 2) }}</td>
+                    <td>{{ $invoice->currency }}</td>
+                    <td>{{ $settings->formatMoney($invoice->total, $invoice->currency) }}</td>
+                    <td>{{ $invoice->status === 'cancelled' ? '—' : $settings->formatMoney($invoice->balanceDue(), $invoice->currency) }}</td>
                     <td>
                         <span class="badge-pill" style="background:{{ $color['bg'] }};color:{{ $color['fg'] }};">{{ ucfirst($invoice->status) }}</span>
                         @if ($invoice->isOverdue($settings->invoice_overdue_grace_days))

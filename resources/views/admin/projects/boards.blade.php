@@ -6,7 +6,7 @@
 <div class="page-head">
     <div>
         <h2>Boards</h2>
-        <p>Pick a project to open its Kanban board.</p>
+        <p>Pick a project to add tasks, assign work to team members, and track progress.</p>
     </div>
 </div>
 

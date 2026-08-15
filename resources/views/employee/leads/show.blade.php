@@ -41,7 +41,7 @@
                 <div><span style="color:var(--ink-soft);">Email</span><div style="font-weight:600;">{{ $lead->email ?? '—' }}</div></div>
                 <div><span style="color:var(--ink-soft);">Phone</span><div style="font-weight:600;">{{ $lead->phone ?? '—' }}</div></div>
                 <div><span style="color:var(--ink-soft);">Country</span><div style="font-weight:600;">{{ $lead->country ?? '—' }}</div></div>
-                <div><span style="color:var(--ink-soft);">Budget</span><div style="font-weight:600;">{{ $lead->budget !== null ? number_format((float) $lead->budget, 2) : '—' }}</div></div>
+                <div><span style="color:var(--ink-soft);">Budget</span><div style="font-weight:600;">{{ $lead->budget !== null ? $lead->currency.' '.number_format((float) $lead->budget, 2) : '—' }}</div></div>
                 @if ($lead->description)
                     <div style="grid-column:1 / -1;"><span style="color:var(--ink-soft);">Description</span><div>{{ $lead->description }}</div></div>
                 @endif

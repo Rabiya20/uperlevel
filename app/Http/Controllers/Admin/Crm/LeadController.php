@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\CrmSettings;
+use App\Models\FinanceSettings;
 use App\Models\Lead;
 use App\Models\LeadFollowup;
 use App\Models\LeadImportBatch;
+use App\Models\Module;
+use App\Models\RolePermission;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,15 +55,17 @@ class LeadController extends Controller
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
         $employees = User::where('tenant_id', $tenant->id)->where('role', User::ROLE_EMPLOYEE)->orderBy('name')->get();
+        $currencyOptions = FinanceSettings::forTenant($tenant)->allCurrencies();
+        $canAssign = $this->canAssignLeads(auth()->user());
 
-        return view('admin.crm.leads.create', ['settings' => $settings, 'employees' => $employees, 'lead' => null, 'isAdmin' => true]);
+        return view('admin.crm.leads.create', ['settings' => $settings, 'employees' => $employees, 'lead' => null, 'isAdmin' => true, 'currencyOptions' => $currencyOptions, 'canAssign' => $canAssign]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
-        $data = $this->validated($request, $tenant, $settings);
+        $data = $this->validated($request, $tenant, $settings, $this->canAssignLeads(auth()->user()));
 
         $duplicate = Lead::findDuplicate($tenant->id, $data['email'] ?? null, $data['phone'] ?? null, $data['company_name'] ?? null);
         if ($duplicate && $settings->duplicate_handling === 'skip') {
@@ -99,8 +104,10 @@ class LeadController extends Controller
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
         $employees = User::where('tenant_id', $tenant->id)->where('role', User::ROLE_EMPLOYEE)->orderBy('name')->get();
+        $currencyOptions = FinanceSettings::forTenant($tenant)->allCurrencies();
+        $canAssign = $this->canAssignLeads(auth()->user());
 
-        return view('admin.crm.leads.edit', compact('lead', 'settings', 'employees') + ['isAdmin' => true]);
+        return view('admin.crm.leads.edit', compact('lead', 'settings', 'employees', 'currencyOptions', 'canAssign') + ['isAdmin' => true]);
     }
 
     public function update(Request $request, Lead $lead): RedirectResponse
@@ -110,7 +117,7 @@ class LeadController extends Controller
 
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
-        $data = $this->validated($request, $tenant, $settings);
+        $data = $this->validated($request, $tenant, $settings, $this->canAssignLeads(auth()->user()));
 
         $reassigned = array_key_exists('assigned_employee_id', $data)
             && $data['assigned_employee_id'] != $lead->assigned_employee_id;
@@ -249,9 +256,29 @@ class LeadController extends Controller
         return $tenant;
     }
 
-    private function validated(Request $request, $tenant, CrmSettings $settings): array
+    /**
+     * Whether this user may (re)assign a lead to a team member. A user with
+     * no custom role keeps today's default — any admin-portal base role
+     * (owner/admin/manager) can — same fallback EnsureModulePermission uses
+     * elsewhere. A user with a custom role is governed entirely by that
+     * role's "Assign" permission on the Leads module, set on Company → User
+     * Role, regardless of their base role — so a tenant can hand this out
+     * to a specific manager without giving them the rest of CRM.
+     */
+    private function canAssignLeads(User $user): bool
     {
-        return $request->validate([
+        if (! $user->role_id) {
+            return in_array($user->role, User::ADMIN_PORTAL_ROLES, true);
+        }
+
+        $module = Module::forPortal('admin')->where('key', 'crm-leads')->first();
+
+        return (bool) ($module && RolePermission::where('role_id', $user->role_id)->where('module_id', $module->id)->value('can_assign'));
+    }
+
+    private function validated(Request $request, $tenant, CrmSettings $settings, bool $canAssign = false): array
+    {
+        $rules = [
             'name' => ['required', 'string', 'max:120'],
             'company_name' => ['nullable', 'string', 'max:120'],
             'email' => ['nullable', 'email', 'max:150'],
@@ -259,11 +286,21 @@ class LeadController extends Controller
             'source' => ['nullable', 'string', Rule::in($settings->lead_sources ?: [])],
             'country' => ['nullable', 'string', 'max:60'],
             'budget' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['required', 'string', Rule::in(FinanceSettings::forTenant($tenant)->allCurrencies())],
             'description' => ['nullable', 'string', 'max:3000'],
-            'assigned_employee_id' => [
+        ];
+
+        // No rule at all (rather than a disallowed value) when the user
+        // can't assign — Request::validate() drops any submitted key that
+        // has no rule, so a spoofed field in the POST body is silently
+        // discarded instead of erroring the whole form out.
+        if ($canAssign) {
+            $rules['assigned_employee_id'] = [
                 'nullable', 'integer',
                 Rule::exists('users', 'id')->where('tenant_id', $tenant->id)->where('role', User::ROLE_EMPLOYEE),
-            ],
-        ]);
+            ];
+        }
+
+        return $request->validate($rules);
     }
 }

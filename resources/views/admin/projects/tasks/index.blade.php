@@ -74,12 +74,21 @@
                     @endif
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
                         <span style="font-size:11px;color:{{ $priorityColors[$task->priority] }};font-weight:700;text-transform:uppercase;">{{ $task->priority }}</span>
-                        <span style="font-size:11px;color:var(--ink-soft);">{{ $task->assignee->name ?? 'Unassigned' }}</span>
+                        @if ($task->due_date)
+                            <span style="font-size:11px;color:var(--ink-soft);">Due {{ $task->due_date->format('j M') }}</span>
+                        @endif
                     </div>
-                    @if ($task->due_date)
-                        <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Due {{ $task->due_date->format('j M') }}</div>
-                    @endif
-                    <form method="POST" action="{{ route('admin.projects.tasks.update', [$project, $task]) }}" style="margin-top:10px;">
+                    <form method="POST" action="{{ route('admin.projects.tasks.update', [$project, $task]) }}" style="margin-top:8px;">
+                        @csrf
+                        @method('PUT')
+                        <select class="f-input f-input-inline" name="assigned_to" onchange="this.form.submit()" title="Reassign this task">
+                            <option value="">Unassigned</option>
+                            @foreach ($assignees as $assignee)
+                                <option value="{{ $assignee->id }}" @selected($assignee->id === $task->assigned_to)>{{ $assignee->name }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                    <form method="POST" action="{{ route('admin.projects.tasks.update', [$project, $task]) }}" style="margin-top:6px;">
                         @csrf
                         @method('PUT')
                         <select class="f-input f-input-inline" name="status" onchange="this.form.submit()">

@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
@@ -36,14 +37,22 @@ class InvoiceController extends Controller
         $tenant = $this->tenant();
         $settings = FinanceSettings::forTenant($tenant);
 
-        $clients = Client::where('tenant_id', $tenant->id)->orderBy('name')->get();
+        $clients = Client::where('tenant_id', $tenant->id)->with('lead:id,budget,currency')->orderBy('name')->get();
         $selectedClientId = $request->integer('client_id') ?: null;
+
+        // Most clients originate from a Won lead — carry its quoted budget
+        // and currency over as the invoice defaults once that client is
+        // picked, so the amount doesn't have to be looked up and retyped.
+        $clientLeadData = $clients->filter(fn (Client $c) => $c->lead !== null)
+            ->mapWithKeys(fn (Client $c) => [$c->id => ['budget' => $c->lead->budget, 'currency' => $c->lead->currency]]);
 
         return view('admin.finance.invoices.create', [
             'settings' => $settings,
             'clients' => $clients,
             'selectedClientId' => $selectedClientId,
             'nextNumber' => $settings->nextInvoiceNumberPreview(),
+            'currencyOptions' => $settings->allCurrencies(),
+            'clientLeadData' => $clientLeadData,
         ]);
     }
 
@@ -56,6 +65,7 @@ class InvoiceController extends Controller
             'client_id' => ['required', 'integer', 'exists:clients,id'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:issue_date'],
+            'currency' => ['required', 'string', Rule::in($settings->allCurrencies())],
             'subtotal' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'apply_tax' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -91,6 +101,7 @@ class InvoiceController extends Controller
                 'invoice_number' => $lockedSettings->consumeNextInvoiceNumber(),
                 'issue_date' => $data['issue_date'],
                 'due_date' => $data['due_date'],
+                'currency' => $data['currency'],
                 'status' => 'draft',
                 'subtotal' => $data['subtotal'],
                 'tax_percentage' => $taxPercentage,

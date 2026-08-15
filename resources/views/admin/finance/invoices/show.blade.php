@@ -56,11 +56,12 @@
         <div><span style="color:var(--ink-soft);">Created by</span><div style="font-weight:600;">{{ $invoice->creator->name ?? '—' }}</div></div>
         <div><span style="color:var(--ink-soft);">Issue Date</span><div style="font-weight:600;">{{ $invoice->issue_date->format('j M Y') }}</div></div>
         <div><span style="color:var(--ink-soft);">Due Date</span><div style="font-weight:600;">{{ $invoice->due_date->format('j M Y') }}</div></div>
-        <div><span style="color:var(--ink-soft);">Subtotal</span><div style="font-weight:600;">{{ $settings->formatMoney($invoice->subtotal) }}</div></div>
-        <div><span style="color:var(--ink-soft);">Tax ({{ $invoice->tax_percentage }}%)</span><div style="font-weight:600;">{{ $settings->formatMoney($invoice->tax_amount) }}</div></div>
-        <div><span style="color:var(--ink-soft);">Total</span><div style="font-weight:700;font-size:15px;">{{ $settings->formatMoney($invoice->total) }}</div></div>
-        <div><span style="color:var(--ink-soft);">Amount Paid</span><div style="font-weight:600;color:#0F7C50;">{{ $settings->formatMoney($invoice->amountPaid()) }}</div></div>
-        <div><span style="color:var(--ink-soft);">Balance Due</span><div style="font-weight:700;font-size:15px;{{ $invoice->balanceDue() > 0 ? 'color:#C0392B;' : '' }}">{{ $settings->formatMoney($invoice->balanceDue()) }}</div></div>
+        <div><span style="color:var(--ink-soft);">Currency</span><div style="font-weight:600;">{{ $invoice->currency }}</div></div>
+        <div><span style="color:var(--ink-soft);">Subtotal</span><div style="font-weight:600;">{{ $settings->formatMoney($invoice->subtotal, $invoice->currency) }}</div></div>
+        <div><span style="color:var(--ink-soft);">Tax ({{ $invoice->tax_percentage }}%)</span><div style="font-weight:600;">{{ $settings->formatMoney($invoice->tax_amount, $invoice->currency) }}</div></div>
+        <div><span style="color:var(--ink-soft);">Total</span><div style="font-weight:700;font-size:15px;">{{ $settings->formatMoney($invoice->total, $invoice->currency) }}</div></div>
+        <div><span style="color:var(--ink-soft);">Amount Paid</span><div style="font-weight:600;color:#0F7C50;">{{ $settings->formatMoney($invoice->amountPaid(), $invoice->currency) }}</div></div>
+        <div><span style="color:var(--ink-soft);">Balance Due</span><div style="font-weight:700;font-size:15px;{{ $invoice->balanceDue() > 0 ? 'color:#C0392B;' : '' }}">{{ $settings->formatMoney($invoice->balanceDue(), $invoice->currency) }}</div></div>
         @if ($invoice->notes)
             <div style="grid-column:1 / -1;"><span style="color:var(--ink-soft);">Notes</span><div>{{ $invoice->notes }}</div></div>
         @endif
@@ -82,7 +83,7 @@
             @foreach ($invoice->payments as $payment)
                 <tr>
                     <td>{{ $payment->payment_date->format('j M Y') }}</td>
-                    <td>{{ $settings->formatMoney($payment->amount) }}</td>
+                    <td>{{ $settings->formatMoney($payment->amount, $invoice->currency) }}</td>
                     <td>{{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}</td>
                     <td>{{ $payment->reference_number ?? '—' }}</td>
                     <td>{{ $payment->receiver->name ?? '—' }}</td>

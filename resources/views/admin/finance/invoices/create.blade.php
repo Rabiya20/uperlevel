@@ -29,12 +29,15 @@
 
             <div>
                 <label class="f-label">Client</label>
-                <select class="f-input" name="client_id" required>
+                <select class="f-input" name="client_id" id="invoiceClient" required>
                     <option value="">Select a client…</option>
                     @foreach ($clients as $client)
                         <option value="{{ $client->id }}" @selected(old('client_id', $selectedClientId) == $client->id)>{{ $client->name }}@if ($client->company_name) ({{ $client->company_name }})@endif</option>
                     @endforeach
                 </select>
+                @if ($clientLeadData->isNotEmpty())
+                    <p style="font-size:11px;color:var(--ink-soft);margin:6px 0 0;">Currency and amount below are filled in automatically from the client's original lead, where one exists — feel free to adjust.</p>
+                @endif
             </div>
             <div></div>
 
@@ -48,15 +51,26 @@
             </div>
 
             <div>
-                <label class="f-label">Amount ({{ $settings->currency_code }})</label>
-                <input class="f-input" type="number" step="0.01" min="0" name="subtotal" value="{{ old('subtotal') }}" required>
+                <label class="f-label">Currency</label>
+                <select class="f-input" name="currency" id="invoiceCurrency">
+                    @foreach ($currencyOptions as $code)
+                        @php $c = config("currencies.{$code}", ['name' => $code, 'symbol' => $code]); @endphp
+                        <option value="{{ $code }}" @selected(old('currency', $settings->currency_code) === $code)>{{ $code }} — {{ $c['name'] }} ({{ $c['symbol'] }})</option>
+                    @endforeach
+                </select>
             </div>
-            <div style="display:flex;align-items:flex-end;padding-bottom:10px;">
+            <div>
+                <label class="f-label">Amount</label>
+                <input class="f-input" type="number" step="0.01" min="0" name="subtotal" id="invoiceAmount" value="{{ old('subtotal') }}" required>
+            </div>
+
+            <div style="display:flex;align-items:center;">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
                     <input type="checkbox" name="apply_tax" value="1" @checked(old('apply_tax'))>
                     Apply {{ $settings->tax_label ?? 'Tax' }} ({{ $settings->tax_percentage }}%)
                 </label>
             </div>
+            <div></div>
 
             <div style="grid-column:1 / -1;">
                 <label class="f-label">Notes</label>
@@ -75,4 +89,37 @@
     .f-label{display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em;}
     .f-input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;background:var(--bg);color:var(--ink);}
 </style>
+
+@if ($clientLeadData->isNotEmpty())
+<script>
+    (function () {
+        const clientLeadData = @json($clientLeadData);
+        const clientSelect = document.getElementById('invoiceClient');
+        const currencySelect = document.getElementById('invoiceCurrency');
+        const amountInput = document.getElementById('invoiceAmount');
+
+        function applyLeadDefaults() {
+            const data = clientLeadData[clientSelect.value];
+            if (! data) {
+                return;
+            }
+            if (data.currency && Array.from(currencySelect.options).some(o => o.value === data.currency)) {
+                currencySelect.value = data.currency;
+            }
+            if (data.budget !== null && data.budget !== undefined) {
+                amountInput.value = data.budget;
+            }
+        }
+
+        clientSelect.addEventListener('change', applyLeadDefaults);
+
+        // Only auto-fill on load for a fresh visit (e.g. arriving via a
+        // client's "+ Create Invoice" link) — never clobber values the user
+        // already typed on a redisplay after a validation error.
+        @if (! $errors->any() && old('subtotal') === null)
+            applyLeadDefaults();
+        @endif
+    })();
+</script>
+@endif
 @endsection

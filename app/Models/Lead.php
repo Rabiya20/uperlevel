@@ -18,6 +18,7 @@ class Lead extends Model
         'source',
         'country',
         'budget',
+        'currency',
         'description',
         'status',
         'previous_status',

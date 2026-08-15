@@ -64,13 +64,14 @@
             <div class="panel">
                 <div class="panel-head" style="justify-content:space-between;">
                     <h3>Tasks</h3>
-                    <a href="{{ route('admin.projects.tasks.index', $project) }}" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">Open Board →</a>
+                    <a href="{{ route('admin.projects.tasks.index', $project) }}" class="btn btn-primary" style="padding:6px 12px;font-size:12px;">+ Assign Work →</a>
                 </div>
                 <div style="padding:16px 20px;display:flex;gap:10px;flex-wrap:wrap;">
                     @forelse (\App\Models\Task::STATUSES as $status)
                         <span class="badge-pill" style="background:var(--primary-soft);color:var(--primary-dark);">{{ ucfirst(str_replace('_', ' ', $status)) }}: {{ $taskCounts[$status] ?? 0 }}</span>
                     @endforeach
                 </div>
+                <p style="padding:0 20px 16px;font-size:12px;color:var(--ink-soft);">Add tasks and assign them to team members on the board — each task card also lets you reassign it later.</p>
             </div>
 
             <div class="panel">

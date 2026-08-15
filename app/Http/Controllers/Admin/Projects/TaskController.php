@@ -55,13 +55,18 @@ class TaskController extends Controller
         $this->authorizeTenant($project);
         abort_unless($task->project_id === $project->id, 404);
 
+        // Two separate auto-submitting selects on the board (status,
+        // assignee) each post only their own field — "sometimes" lets
+        // either update independently without the other needing to be
+        // resent every time.
         $data = $request->validate([
-            'status' => ['required', Rule::in(Task::STATUSES)],
+            'status' => ['sometimes', 'required', Rule::in(Task::STATUSES)],
+            'assigned_to' => ['sometimes', 'nullable', 'integer', Rule::exists('users', 'id')->where('tenant_id', $project->tenant_id)],
         ]);
 
         $task->update($data);
 
-        return back()->with('status', 'Task updated.');
+        return back()->with('status', array_key_exists('assigned_to', $data) ? 'Task reassigned.' : 'Task updated.');
     }
 
     public function destroy(Project $project, Task $task): RedirectResponse

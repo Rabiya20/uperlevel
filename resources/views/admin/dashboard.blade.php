@@ -52,7 +52,13 @@
         <div class="kpi-card">
             <div class="kpi-label">Pending Invoices</div>
             <div class="kpi-value">{{ $accountsStats['pending_count'] }}</div>
-            <div class="kpi-delta">{{ number_format($accountsStats['pending_total'], 2) }} outstanding</div>
+            <div class="kpi-delta">
+                @if ($accountsStats['pending_by_currency']->isEmpty())
+                    Nothing outstanding
+                @else
+                    {{ $accountsStats['pending_by_currency']->map(fn ($amount, $currency) => $currency.' '.number_format($amount, 2))->join(' + ') }} outstanding
+                @endif
+            </div>
         </div>
     @endif
 </div>
@@ -144,7 +150,7 @@
                                 <strong>{{ $invoice->invoice_number }}</strong> — {{ $invoice->client->name ?? '—' }}
                             </div>
                             <div class="activity-time">
-                                Due {{ $invoice->due_date->format('j M Y') }} · {{ number_format((float) $invoice->total, 2) }}
+                                Due {{ $invoice->due_date->format('j M Y') }} · {{ $invoice->currency }} {{ number_format((float) $invoice->total, 2) }}
                             </div>
                         </div>
                     </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\CrmSettings;
+use App\Models\FinanceSettings;
 use App\Models\Lead;
 use App\Models\LeadFollowup;
 use Illuminate\Http\RedirectResponse;
@@ -49,15 +50,16 @@ class LeadController extends Controller
     {
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
+        $currencyOptions = FinanceSettings::forTenant($tenant)->allCurrencies();
 
-        return view('employee.leads.create', ['settings' => $settings, 'lead' => null, 'isAdmin' => false]);
+        return view('employee.leads.create', ['settings' => $settings, 'lead' => null, 'isAdmin' => false, 'currencyOptions' => $currencyOptions]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $tenant = $this->tenant();
         $settings = CrmSettings::forTenant($tenant);
-        $data = $this->validated($request, $settings);
+        $data = $this->validated($request, $tenant, $settings);
 
         $duplicate = Lead::findDuplicate($tenant->id, $data['email'] ?? null, $data['phone'] ?? null, $data['company_name'] ?? null);
         if ($duplicate && $settings->duplicate_handling === 'skip') {
@@ -93,9 +95,11 @@ class LeadController extends Controller
         $lead->authorizeAccess(auth()->user());
         abort_unless($lead->canEdit(auth()->user()), 403, 'This lead is locked pending approval.');
 
-        $settings = CrmSettings::forTenant($this->tenant());
+        $tenant = $this->tenant();
+        $settings = CrmSettings::forTenant($tenant);
+        $currencyOptions = FinanceSettings::forTenant($tenant)->allCurrencies();
 
-        return view('employee.leads.edit', compact('lead', 'settings') + ['isAdmin' => false]);
+        return view('employee.leads.edit', compact('lead', 'settings', 'currencyOptions') + ['isAdmin' => false]);
     }
 
     public function update(Request $request, Lead $lead): RedirectResponse
@@ -103,8 +107,9 @@ class LeadController extends Controller
         $lead->authorizeAccess(auth()->user());
         abort_unless($lead->canEdit(auth()->user()), 403, 'This lead is locked pending approval.');
 
-        $settings = CrmSettings::forTenant($this->tenant());
-        $data = $this->validated($request, $settings);
+        $tenant = $this->tenant();
+        $settings = CrmSettings::forTenant($tenant);
+        $data = $this->validated($request, $tenant, $settings);
 
         $lead->update($data);
         $lead->logActivity('updated', auth()->user(), 'Lead details updated.');
@@ -181,7 +186,7 @@ class LeadController extends Controller
         return $tenant;
     }
 
-    private function validated(Request $request, CrmSettings $settings): array
+    private function validated(Request $request, $tenant, CrmSettings $settings): array
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -191,6 +196,7 @@ class LeadController extends Controller
             'source' => ['nullable', 'string', Rule::in($settings->lead_sources ?: [])],
             'country' => ['nullable', 'string', 'max:60'],
             'budget' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['required', 'string', Rule::in(FinanceSettings::forTenant($tenant)->allCurrencies())],
             'description' => ['nullable', 'string', 'max:3000'],
         ]);
     }

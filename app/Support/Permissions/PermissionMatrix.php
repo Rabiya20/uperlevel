@@ -3,14 +3,19 @@
 namespace App\Support\Permissions;
 
 /**
- * Which of View/Create/Edit/Delete are actually meaningful for a given
- * module, keyed by Module::key — used by the Add/Edit Role screen to grey
- * out checkboxes that don't correspond to any real route (e.g. Dashboard
- * has no create/edit/delete action anywhere). Derived by auditing each
- * module's routes against EnsureModulePermission::requiredLevel()'s verb
- * mapping (GET→view, POST+".store"→create, PUT/PATCH→edit, DELETE→delete,
- * any other POST→edit). A module not listed here defaults to all four
- * levels — fail open, so nothing already-correct regresses.
+ * Which of View/Create/Edit/Delete(/Assign) are actually meaningful for a
+ * given module, keyed by Module::key — used by the Add/Edit Role screen to
+ * grey out checkboxes that don't correspond to any real route (e.g.
+ * Dashboard has no create/edit/delete action anywhere). Derived by auditing
+ * each module's routes against EnsureModulePermission::requiredLevel()'s
+ * verb mapping (GET→view, POST+".store"→create, PUT/PATCH→edit, DELETE→
+ * delete, any other POST→edit). A module not listed here defaults to all
+ * four base levels — fail open, so nothing already-correct regresses.
+ *
+ * "assign" (crm-leads only, for now) is the one level not tied to an HTTP
+ * verb — it isn't enforced by EnsureModulePermission at all, but checked
+ * directly in Admin\Crm\LeadController, since lead reassignment shares the
+ * same store/update route as every other lead field.
  */
 class PermissionMatrix
 {
@@ -32,7 +37,7 @@ class PermissionMatrix
         'projects-timesheets' => ['view', 'create', 'delete'],
         'projects-milestones' => ['view', 'create', 'edit', 'delete'],
         'crm-overview' => ['view'],
-        'crm-leads' => ['view', 'create', 'edit', 'delete'],
+        'crm-leads' => ['view', 'create', 'edit', 'delete', 'assign'],
         'crm-followups' => ['view'],
         'crm-approvals' => ['view'],
         'crm-imports' => ['view', 'edit'],

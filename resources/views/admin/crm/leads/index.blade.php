@@ -101,15 +101,25 @@
                     <td>{{ $lead->company_name ?? '—' }}</td>
                     <td>{{ $lead->source ?? '—' }}</td>
                     <td>
-                        <span class="badge-pill" style="background:{{ $stage['is_won'] ?? false ? '#E7F7EE' : ($stage['is_lost'] ?? false ? '#FDEEEC' : 'var(--primary-soft)') }};color:{{ $stage['is_won'] ?? false ? '#0F7C50' : ($stage['is_lost'] ?? false ? '#C0392B' : 'var(--primary-dark)') }};">
-                            {{ $stage['label'] ?? $lead->status }}
-                        </span>
+                        @php $badgeBg = $stage['is_won'] ?? false ? '#E7F7EE' : ($stage['is_lost'] ?? false ? '#FDEEEC' : 'var(--primary-soft)'); $badgeFg = $stage['is_won'] ?? false ? '#0F7C50' : ($stage['is_lost'] ?? false ? '#C0392B' : 'var(--primary-dark)'); @endphp
+                        @if ($lead->canEdit(auth()->user()) && ! ($lead->is_locked && $lead->conversion_status === 'pending_approval'))
+                            <form method="POST" action="{{ route('admin.crm.leads.status', $lead) }}" style="display:inline-block;">
+                                @csrf
+                                <select name="status" onchange="this.form.submit()" class="status-select" style="background:{{ $badgeBg }};color:{{ $badgeFg }};" title="Pick a stage to update it right away">
+                                    @foreach ($settings->pipeline_stages as $s)
+                                        <option value="{{ $s['key'] }}" @selected($s['key'] === $lead->status)>{{ $s['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        @else
+                            <span class="badge-pill" style="background:{{ $badgeBg }};color:{{ $badgeFg }};">{{ $stage['label'] ?? $lead->status }}</span>
+                        @endif
                         @if ($lead->conversion_status === 'pending_approval')
                             <span class="badge-pill" style="background:#FFF4E5;color:#B4690E;">Pending approval</span>
                         @endif
                     </td>
                     <td>{{ $lead->assignedEmployee->name ?? '—' }}</td>
-                    <td>{{ $lead->budget !== null ? number_format((float) $lead->budget, 2) : '—' }}</td>
+                    <td>{{ $lead->budget !== null ? $lead->currency.' '.number_format((float) $lead->budget, 2) : '—' }}</td>
                     <td><a href="{{ route('admin.crm.leads.show', $lead) }}" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">View</a></td>
                 </tr>
             @endforeach
@@ -124,5 +134,6 @@
 <style>
     .f-label{display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em;}
     .f-input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;background:var(--bg);color:var(--ink);}
+    .status-select{padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700;border:none;cursor:pointer;}
 </style>
 @endsection

@@ -96,7 +96,7 @@
 
             Object.keys(template.permissions).forEach(function (moduleId) {
                 const levels = template.permissions[moduleId];
-                ['view', 'create', 'edit', 'delete'].forEach(function (level) {
+                ['view', 'create', 'edit', 'delete', 'assign'].forEach(function (level) {
                     if (! levels[level]) {
                         return;
                     }

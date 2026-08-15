@@ -16,6 +16,7 @@ class Invoice extends Model
         'invoice_number',
         'issue_date',
         'due_date',
+        'currency',
         'status',
         'subtotal',
         'tax_percentage',

@@ -164,6 +164,7 @@ class RoleController extends Controller
                         'create' => $p->can_create,
                         'edit' => $p->can_edit,
                         'delete' => $p->can_delete,
+                        'assign' => $p->can_assign,
                     ],
                 ]),
             ]);
@@ -181,6 +182,7 @@ class RoleController extends Controller
                     'can_create' => $request->boolean("permissions.{$moduleId}.create"),
                     'can_edit' => $request->boolean("permissions.{$moduleId}.edit"),
                     'can_delete' => $request->boolean("permissions.{$moduleId}.delete"),
+                    'can_assign' => $request->boolean("permissions.{$moduleId}.assign"),
                 ]
             );
         }

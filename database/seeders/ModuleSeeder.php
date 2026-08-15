@@ -90,14 +90,18 @@ class ModuleSeeder extends Seeder
             $this->make($portal, 'projects-'.str($label)->slug(), $label, $owner, null, $projectRoutes[$label] ?? null, $i + 1, $projects->id);
         }
 
-        $crm = $this->make($portal, 'crm', 'Leads / CRM', $ownerAdmin, 'target', null, 5);
-        $this->make($portal, 'crm-overview', 'Leads Overview', $ownerAdmin, null, 'admin.crm.overview.index', 0, $crm->id);
-        $this->make($portal, 'crm-leads', 'Leads', $ownerAdmin, null, 'admin.crm.leads.index', 1, $crm->id);
-        $this->make($portal, 'crm-followups', 'Follow-ups', $ownerAdmin, null, 'admin.crm.followups.index', 2, $crm->id);
-        $this->make($portal, 'crm-approvals', 'Approvals', $ownerAdmin, null, 'admin.crm.leads.approvals', 3, $crm->id);
-        $this->make($portal, 'crm-imports', 'Imports', $ownerAdmin, null, 'admin.crm.imports.index', 4, $crm->id);
-        $this->make($portal, 'crm-reports', 'Leads Report', $ownerAdmin, null, 'admin.crm.reports.index', 5, $crm->id);
-        $this->make($portal, 'crm-setup', 'Setup', $ownerAdmin, null, 'admin.crm.settings', 6, $crm->id);
+        // Owner/admin/manager can reach CRM at the route level, same as
+        // HR/Projects/Company — the custom-role system (RolePermission) is
+        // what actually narrows a given manager down to specific screens
+        // and capabilities (e.g. the "Assign" capability on Leads).
+        $crm = $this->make($portal, 'crm', 'Leads / CRM', $owner, 'target', null, 5);
+        $this->make($portal, 'crm-overview', 'Leads Overview', $owner, null, 'admin.crm.overview.index', 0, $crm->id);
+        $this->make($portal, 'crm-leads', 'Leads', $owner, null, 'admin.crm.leads.index', 1, $crm->id);
+        $this->make($portal, 'crm-followups', 'Follow-ups', $owner, null, 'admin.crm.followups.index', 2, $crm->id);
+        $this->make($portal, 'crm-approvals', 'Approvals', $owner, null, 'admin.crm.leads.approvals', 3, $crm->id);
+        $this->make($portal, 'crm-imports', 'Imports', $owner, null, 'admin.crm.imports.index', 4, $crm->id);
+        $this->make($portal, 'crm-reports', 'Leads Report', $owner, null, 'admin.crm.reports.index', 5, $crm->id);
+        $this->make($portal, 'crm-setup', 'Setup', $owner, null, 'admin.crm.settings', 6, $crm->id);
 
         $company = $this->make($portal, 'company', 'Company', $owner, 'building-community', null, 6);
         $this->make($portal, 'company-user-role', 'User Role', $ownerAdmin, null, 'admin.company.roles.index', 0, $company->id);

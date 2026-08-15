@@ -177,7 +177,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // Leads / CRM
-        Route::prefix('crm')->name('crm.')->middleware('role:owner,admin,superadmin')->group(function () {
+        Route::prefix('crm')->name('crm.')->middleware('role:owner,admin,manager,superadmin')->group(function () {
             Route::get('/overview', [CrmOverviewController::class, 'index'])->name('overview.index');
 
             Route::prefix('reports')->name('reports.')->group(function () {

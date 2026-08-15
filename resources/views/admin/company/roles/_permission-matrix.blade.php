@@ -1,6 +1,6 @@
 {{-- $modules: Collection<{top: Module, rows: Collection<Module>}>, $permissions: RolePermission[] keyed by module_id --}}
 <table class="perm-matrix">
-    <tr><th style="width:40%;">Module</th><th>View</th><th>Create</th><th>Edit</th><th>Delete</th></tr>
+    <tr><th style="width:36%;">Module</th><th>View</th><th>Create</th><th>Edit</th><th>Delete</th><th>Assign</th></tr>
     @foreach ($modules as $group)
         @php
             $topId = $group['top']->id;
@@ -10,7 +10,7 @@
 
         @unless ($isSingleRow)
             <tr class="perm-group-head" data-group-head="{{ $topId }}">
-                <td colspan="5">
+                <td colspan="6">
                     <label class="perm-check-all">
                         <input type="checkbox" onchange="togglePermGroup({{ $topId }}, this.checked)">
                         {{ $group['top']->name }}
@@ -35,7 +35,7 @@
                         {{ $m->name }}
                     @endif
                 </td>
-                @foreach (['view', 'create', 'edit', 'delete'] as $level)
+                @foreach (['view', 'create', 'edit', 'delete', 'assign'] as $level)
                     @php $enabled = in_array($level, $allowed, true); @endphp
                     <td style="text-align:center;">
                         <input type="hidden" name="permissions[{{ $m->id }}][{{ $level }}]" value="0">

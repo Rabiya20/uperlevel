@@ -89,9 +89,14 @@ class DashboardController extends Controller
                 ->withSum('payments', 'amount')
                 ->get();
 
+            // Invoices can be billed in different currencies (tenant's base
+            // + whatever else is enabled in Finance Setup) — summed per
+            // currency so amounts are never added together across currencies.
             $accountsStats = [
                 'pending_count' => $pendingInvoices->count(),
-                'pending_total' => $pendingInvoices->sum(fn (Invoice $i) => max(0, (float) $i->total - (float) ($i->payments_sum_amount ?? 0))),
+                'pending_by_currency' => $pendingInvoices
+                    ->groupBy('currency')
+                    ->map(fn ($group) => $group->sum(fn (Invoice $i) => max(0, (float) $i->total - (float) ($i->payments_sum_amount ?? 0)))),
             ];
 
             $dueInvoicesThisMonth = Invoice::where('tenant_id', $tenant->id)
