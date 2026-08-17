@@ -80,7 +80,13 @@
                 <div><div class="f-label">Date of joining</div>{{ optional($employee->date_of_joining)->format('j M Y') ?? '—' }}</div>
                 <div><div class="f-label">Shift</div>{{ $employee->shift->name ?? '—' }}@if ($employee->workingHoursLabel()) <span style="color:var(--ink-soft);font-weight:400;">({{ $employee->workingHoursLabel() }})</span>@endif</div>
                 <div><div class="f-label">Reports to</div>{{ $employee->reportingManager->name ?? '—' }}</div>
-                <div><div class="f-label">Basic salary</div>{{ $employee->basic_salary !== null ? number_format($employee->basic_salary, 2) : '—' }}</div>
+                @if ($canViewSalary)
+                    <div>
+                        <div class="f-label">Basic salary</div>
+                        {{ $employee->basic_salary !== null ? number_format($employee->basic_salary, 2) : '—' }}
+                        <a href="{{ route('admin.hr.employees.salary.edit', $employee) }}" style="margin-left:8px;font-size:12px;color:var(--primary-dark);">Manage →</a>
+                    </div>
+                @endif
             </div>
         </div>
 

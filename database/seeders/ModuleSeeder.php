@@ -75,6 +75,7 @@ class ModuleSeeder extends Seeder
         foreach (['Overview', 'Employees', 'Attendance', 'Leave Management', 'Payroll', 'Recruitment', 'Performance'] as $i => $label) {
             $this->make($portal, 'hr-'.str($label)->slug(), $label, $owner, null, $hrRoutes[$label] ?? null, $i, $hr->id);
         }
+        $this->make($portal, 'hr-salary', 'Salary', $owner, null, 'admin.hr.salary.index', 10, $hr->id);
         $this->make($portal, 'hr-attendance-import', 'Attendance Import', $owner, null, 'admin.hr.attendance.import.index', 7, $hr->id);
         $this->make($portal, 'hr-reports', 'Reports', $owner, null, 'admin.hr.reports.index', 8, $hr->id);
         $this->make($portal, 'hr-setup', 'Setup', $owner, null, 'admin.hr.settings', 9, $hr->id);

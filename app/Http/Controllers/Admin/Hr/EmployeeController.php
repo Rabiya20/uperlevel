@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\Module;
 use App\Models\Role;
 use App\Models\Shift;
 use App\Models\User;
@@ -56,10 +57,12 @@ class EmployeeController extends Controller
         $designations = Designation::where('tenant_id', $tenant->id)->where('is_active', true)->with('department')->orderBy('name')->get();
         $suggestedCode = User::nextEmployeeCode($tenant);
         $roles = $this->roleOptions($tenant->id);
+        $canViewSalary = Module::userHasCapability(auth()->user(), 'hr-salary', 'view');
 
         return view('admin.hr.employees.create', [
             'employee' => null, 'managers' => $managers, 'shifts' => $shifts,
             'departments' => $departments, 'designations' => $designations, 'suggestedCode' => $suggestedCode, 'roles' => $roles,
+            'canViewSalary' => $canViewSalary,
         ]);
     }
 
@@ -92,8 +95,9 @@ class EmployeeController extends Controller
         $departments = Department::where('tenant_id', $employee->tenant_id)->where('is_active', true)->orderBy('name')->get();
         $designations = Designation::where('tenant_id', $employee->tenant_id)->where('is_active', true)->with('department')->orderBy('name')->get();
         $roles = $this->roleOptions($employee->tenant_id);
+        $canViewSalary = Module::userHasCapability(auth()->user(), 'hr-salary', 'view');
 
-        return view('admin.hr.employees.edit', compact('employee', 'managers', 'shifts', 'departments', 'designations', 'roles'));
+        return view('admin.hr.employees.edit', compact('employee', 'managers', 'shifts', 'departments', 'designations', 'roles', 'canViewSalary'));
     }
 
     public function update(Request $request, User $employee): RedirectResponse
@@ -116,8 +120,9 @@ class EmployeeController extends Controller
     {
         $this->authorizeManageable($employee);
         $employee->load(['shift', 'reportingManager', 'department', 'designation', 'customRole']);
+        $canViewSalary = Module::userHasCapability(auth()->user(), 'hr-salary', 'view');
 
-        return view('admin.hr.employees.show', compact('employee'));
+        return view('admin.hr.employees.show', compact('employee', 'canViewSalary'));
     }
 
     public function resetPassword(User $employee): RedirectResponse
@@ -194,7 +199,6 @@ class EmployeeController extends Controller
                 'nullable',
                 Rule::exists('users', 'id')->where('tenant_id', $tenantId),
             ],
-            'basic_salary' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'shift_id' => ['nullable', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
             // Both required together — a lone override on one side would
             // leave the other half of the range meaningless.

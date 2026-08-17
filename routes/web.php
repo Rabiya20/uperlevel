@@ -31,11 +31,13 @@ use App\Http\Controllers\Admin\Hr\DesignationController;
 use App\Http\Controllers\Admin\Hr\EmployeeController as HrEmployeeController;
 use App\Http\Controllers\Admin\Hr\EmployeeImportController;
 use App\Http\Controllers\Admin\Hr\EmployeePayrollController;
+use App\Http\Controllers\Admin\Hr\EmployeeSalaryController;
 use App\Http\Controllers\Admin\Hr\LeaveController as HrLeaveController;
 use App\Http\Controllers\Admin\Hr\LeaveTypeController;
 use App\Http\Controllers\Admin\Hr\PayrollComponentController;
 use App\Http\Controllers\Admin\Hr\PayrollController;
 use App\Http\Controllers\Admin\Hr\ReportController as HrReportController;
+use App\Http\Controllers\Admin\Hr\SalaryController;
 use App\Http\Controllers\Admin\Hr\SettingsController as HrSettingsController;
 use App\Http\Controllers\Admin\Hr\ShiftController;
 use App\Http\Controllers\Admin\Projects\MilestoneController as ProjectMilestoneController;
@@ -239,6 +241,14 @@ Route::middleware('auth')->group(function () {
             Route::get('/employees/{employee}/payroll', [EmployeePayrollController::class, 'edit'])->name('employees.payroll.edit');
             Route::put('/employees/{employee}/payroll', [EmployeePayrollController::class, 'update'])->name('employees.payroll.update');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+
+            // Basic salary — same reasoning as Payroll above, but its own
+            // module: a tenant can grant one without the other (e.g. an
+            // ops manager who should see payroll components but never the
+            // raw base salary figure, or vice versa).
+            Route::get('/employees/{employee}/salary', [EmployeeSalaryController::class, 'edit'])->name('employees.salary.edit');
+            Route::put('/employees/{employee}/salary', [EmployeeSalaryController::class, 'update'])->name('employees.salary.update');
+            Route::get('/salary', [SalaryController::class, 'index'])->name('salary.index');
 
             // Payroll *component* configuration (allowances, deductions,
             // etc.) stays owner/admin-only — that's Setup, not Payroll.

@@ -34,6 +34,7 @@ class Module extends Model
         'admin.hr.designations' => 'hr-setup',
         'admin.hr.payroll-components' => 'hr-setup',
         'admin.hr.employees.payroll' => 'hr-payroll',
+        'admin.hr.employees.salary' => 'hr-salary',
         'admin.projects.tasks' => 'projects-boards',
         'admin.projects.archive' => 'projects-all-projects',
         'admin.projects.restore' => 'projects-all-projects',
@@ -127,6 +128,27 @@ class Module extends Model
     public function allowedFor(string $role): bool
     {
         return in_array($role, array_map('trim', explode(',', $this->roles)), true);
+    }
+
+    /**
+     * Whether $user has a given capability (view/create/edit/delete/assign)
+     * on a module by key — for capabilities that aren't enforced by a plain
+     * route middleware check alone (e.g. a field that's only conditionally
+     * shown/editable within an otherwise shared screen). Mirrors
+     * EnsureModulePermission's own resolution: a user with no custom role
+     * gets the base-role default (any admin-portal role passes); a user
+     * with a custom role is governed entirely by that role's grant on this
+     * module, regardless of their base role.
+     */
+    public static function userHasCapability(User $user, string $moduleKey, string $level, string $portal = 'admin'): bool
+    {
+        if (! $user->role_id) {
+            return in_array($user->role, User::ADMIN_PORTAL_ROLES, true);
+        }
+
+        $module = static::forPortal($portal)->where('key', $moduleKey)->first();
+
+        return (bool) ($module && RolePermission::where('role_id', $user->role_id)->where('module_id', $module->id)->value("can_{$level}"));
     }
 
     public static function routeGroup(?string $route, int $depth = 3): ?string

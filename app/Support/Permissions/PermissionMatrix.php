@@ -30,6 +30,7 @@ class PermissionMatrix
         'hr-attendance' => ['view', 'edit', 'delete'],
         'hr-leave-management' => ['view', 'edit'],
         'hr-payroll' => ['view', 'edit'],
+        'hr-salary' => ['view', 'edit'],
         'hr-reports' => ['view'],
         'hr-setup' => ['view', 'create', 'edit', 'delete'],
         'projects-all-projects' => ['view', 'create', 'edit'],

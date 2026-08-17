@@ -157,10 +157,11 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="f-label">Basic salary</label>
-                    <input class="f-input" type="number" step="0.01" min="0" name="basic_salary" value="{{ $s('basic_salary') }}">
-                </div>
+                @if ($employee && ($canViewSalary ?? false))
+                    <div style="grid-column:1 / -1;">
+                        <p class="f-hint" style="margin:0;">Basic salary moved to its own screen — <a href="{{ route('admin.hr.employees.salary.edit', $employee) }}" style="color:var(--primary-dark);">manage it here</a>.</p>
+                    </div>
+                @endif
                 <div style="grid-column:1 / -1;">
                     <label class="f-label">Workstation machine name — optional</label>
                     <input class="f-input" type="text" name="machine_name" value="{{ $s('machine_name') }}" placeholder="e.g. OFFICE-PC-01" maxlength="100" autocomplete="off">
