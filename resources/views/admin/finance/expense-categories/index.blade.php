@@ -34,7 +34,13 @@
             @foreach ($categories as $category)
                 <tr>
                     <td><strong>{{ $category->name }}</strong></td>
-                    <td>{{ $category->chartOfAccount ? $category->chartOfAccount->code.' — '.$category->chartOfAccount->name : 'Ledger default' }}</td>
+                    <td>
+                        @if ($category->chartOfAccount)
+                            <a href="{{ route('admin.finance.ledger.accounts.show', $category->chartOfAccount) }}" style="color:var(--primary-dark);">{{ $category->chartOfAccount->code }} — {{ $category->chartOfAccount->name }}</a>
+                        @else
+                            <span style="color:#C0392B;">Not linked — edit this category to fix</span>
+                        @endif
+                    </td>
                     <td>{{ $category->expenses_count }}</td>
                     <td>
                         @if ($category->is_active)

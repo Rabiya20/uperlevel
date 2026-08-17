@@ -10,12 +10,12 @@
     <div>
         <label class="f-label">Posts to account — optional</label>
         <select class="f-input" name="chart_of_account_id">
-            <option value="">Use ledger default expense account</option>
+            <option value="">Auto-create a matching account for this category</option>
             @foreach ($accounts as $account)
                 <option value="{{ $account->id }}" @selected($s('chart_of_account_id') == $account->id)>{{ $account->code }} — {{ $account->name }}</option>
             @endforeach
         </select>
-        <p class="f-hint">When the ledger auto-posts an approved expense in this category, it debits this account instead of the tenant-wide default.</p>
+        <p class="f-hint">Every category needs somewhere in the Chart of Accounts to post to. Leave this blank and one is created automatically (named after the category); pick an existing account instead if several categories should share one.</p>
     </div>
     <label class="f-check">
         <input type="hidden" name="is_active" value="0">

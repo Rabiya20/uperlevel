@@ -48,6 +48,12 @@ class ChartOfAccount extends Model
         return $this->hasMany(JournalEntryLine::class);
     }
 
+    /** Expense categories that post to this account — see ExpenseCategory::chartOfAccount(). */
+    public function expenseCategories(): HasMany
+    {
+        return $this->hasMany(ExpenseCategory::class);
+    }
+
     /**
      * Opening balance plus every journal movement since — expressed in
      * "normal balance" terms for this account's type, so a healthy

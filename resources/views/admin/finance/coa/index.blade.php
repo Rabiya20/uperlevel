@@ -46,7 +46,7 @@
         </div>
     @else
         <table>
-            <tr><th>Code</th><th>Name</th><th>Type</th><th>Parent</th><th>Opening Balance</th><th>Status</th><th></th></tr>
+            <tr><th>Code</th><th>Name</th><th>Type</th><th>Parent</th><th>Expense Categories</th><th>Opening Balance</th><th>Status</th><th></th></tr>
             @foreach ($typeLabels as $type => $label)
                 @foreach ($grouped->get($type, []) as $account)
                     <tr>
@@ -56,6 +56,7 @@
                             <span class="badge-pill" style="background:{{ $typeColors[$type]['bg'] }};color:{{ $typeColors[$type]['fg'] }};">{{ $label }}</span>
                         </td>
                         <td>{{ $account->parent?->name ?? '—' }}</td>
+                        <td>{{ $account->expenseCategories->isNotEmpty() ? $account->expenseCategories->pluck('name')->join(', ') : '—' }}</td>
                         <td>{{ number_format((float) $account->opening_balance, 2) }}</td>
                         <td>
                             @if ($account->is_active)

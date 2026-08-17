@@ -39,6 +39,7 @@ class ChartOfAccountController extends Controller
         $tenant = $this->tenant();
 
         $accounts = ChartOfAccount::where('tenant_id', $tenant->id)
+            ->with('expenseCategories')
             ->orderBy('type')
             ->orderBy('code')
             ->get();
