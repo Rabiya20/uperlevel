@@ -35,18 +35,28 @@ class Shift extends Model
         return $this->hasMany(User::class);
     }
 
-    /** This shift's start, anchored to a specific work date. */
-    public function startDateTimeFor(Carbon $workDate): Carbon
+    /**
+     * This shift's start, anchored to a specific work date. Accepts an
+     * optional per-employee override (e.g. User::custom_start_time or the
+     * same snapshotted onto an Attendance row) in place of this shift's own
+     * start_time — the shift itself stays the shared/canonical definition.
+     */
+    public function startDateTimeFor(Carbon $workDate, ?string $overrideStart = null): Carbon
     {
-        return Carbon::parse($workDate->format('Y-m-d').' '.Carbon::parse($this->start_time)->format('H:i:s'));
+        return Carbon::parse($workDate->format('Y-m-d').' '.Carbon::parse($overrideStart ?: $this->start_time)->format('H:i:s'));
     }
 
-    /** This shift's end, anchored to a specific work date — pushed a day forward when the shift crosses midnight. */
-    public function endDateTimeFor(Carbon $workDate): Carbon
+    /**
+     * This shift's end, anchored to a specific work date — pushed a day
+     * forward when the (possibly overridden) shift crosses midnight. Pass
+     * both overrides together — an employee's custom hours are always
+     * start+end as a pair, never just one side.
+     */
+    public function endDateTimeFor(Carbon $workDate, ?string $overrideStart = null, ?string $overrideEnd = null): Carbon
     {
-        $end = Carbon::parse($workDate->format('Y-m-d').' '.Carbon::parse($this->end_time)->format('H:i:s'));
+        $end = Carbon::parse($workDate->format('Y-m-d').' '.Carbon::parse($overrideEnd ?: $this->end_time)->format('H:i:s'));
 
-        if ($end->lessThanOrEqualTo($this->startDateTimeFor($workDate))) {
+        if ($end->lessThanOrEqualTo($this->startDateTimeFor($workDate, $overrideStart))) {
             $end->addDay();
         }
 

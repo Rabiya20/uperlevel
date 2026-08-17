@@ -22,7 +22,10 @@ class Attendance extends Model
         'check_out_time' => ['check-out time', 'check out time', 'check out'],
     ];
 
-    protected $fillable = ['user_id', 'tenant_id', 'shift_id', 'work_date', 'check_in', 'check_out', 'status', 'marked_by', 'marked_at'];
+    protected $fillable = [
+        'user_id', 'tenant_id', 'shift_id', 'custom_start_time', 'custom_end_time',
+        'work_date', 'check_in', 'check_out', 'status', 'marked_by', 'marked_at',
+    ];
 
     protected $casts = [
         'work_date' => 'date',
@@ -49,14 +52,21 @@ class Attendance extends Model
     /**
      * Automatically check the user in for today if they have not been
      * checked in already. Called from the login flow. Stamps whichever
-     * shift the user is currently assigned to, so a later reassignment
-     * never rewrites this day's history.
+     * shift the user is currently assigned to (and any custom hours
+     * override), so a later reassignment or edit never rewrites this day's
+     * history.
      */
     public static function autoCheckIn(User $user): self
     {
         return static::firstOrCreate(
             ['user_id' => $user->id, 'work_date' => now()->toDateString()],
-            ['tenant_id' => $user->tenant_id, 'shift_id' => $user->shift_id, 'check_in' => now()]
+            [
+                'tenant_id' => $user->tenant_id,
+                'shift_id' => $user->shift_id,
+                'custom_start_time' => $user->custom_start_time,
+                'custom_end_time' => $user->custom_end_time,
+                'check_in' => now(),
+            ]
         );
     }
 
@@ -85,7 +95,7 @@ class Attendance extends Model
             return false;
         }
 
-        return $user->shift && now()->greaterThan($user->shift->endDateTimeFor($date));
+        return $user->shift && now()->greaterThan($user->shift->endDateTimeFor($date, $user->custom_start_time, $user->custom_end_time));
     }
 
     /** Null when there's no shift to compare against, or no check-in yet. */
@@ -95,7 +105,7 @@ class Attendance extends Model
             return null;
         }
 
-        $expectedStart = $this->shift->startDateTimeFor($this->work_date)->addMinutes($this->shift->grace_minutes);
+        $expectedStart = $this->shift->startDateTimeFor($this->work_date, $this->custom_start_time)->addMinutes($this->shift->grace_minutes);
 
         return $this->check_in->greaterThan($expectedStart);
     }
@@ -133,7 +143,7 @@ class Attendance extends Model
             return 0;
         }
 
-        $expectedEnd = $this->shift->endDateTimeFor($this->work_date)->addMinutes($settings->overtime_threshold_minutes);
+        $expectedEnd = $this->shift->endDateTimeFor($this->work_date, $this->custom_start_time, $this->custom_end_time)->addMinutes($settings->overtime_threshold_minutes);
 
         return $this->check_out->greaterThan($expectedEnd) ? $expectedEnd->diffInMinutes($this->check_out) : 0;
     }
@@ -296,11 +306,20 @@ class Attendance extends Model
         $checkIn = $status === 'present' && $checkInTime ? Carbon::parse($date->toDateString().' '.$checkInTime) : null;
         $checkOut = $status === 'present' && $checkOutTime ? Carbon::parse($date->toDateString().' '.$checkOutTime) : null;
 
+        // Shifts can cross midnight (e.g. 4 PM-1 AM, 8 PM-6 AM) — a
+        // check-out clock-time at or before check-in means it happened the
+        // next calendar day, same convention as Shift::endDateTimeFor().
+        if ($checkIn && $checkOut && $checkOut->lessThanOrEqualTo($checkIn)) {
+            $checkOut->addDay();
+        }
+
         $attendance = static::updateOrCreate(
             ['user_id' => $user->id, 'work_date' => $date->toDateString()],
             [
                 'tenant_id' => $user->tenant_id,
                 'shift_id' => $user->shift_id,
+                'custom_start_time' => $user->custom_start_time,
+                'custom_end_time' => $user->custom_end_time,
                 'check_in' => $checkIn,
                 'check_out' => $checkOut,
                 'status' => $status === 'absent' ? 'absent' : null,

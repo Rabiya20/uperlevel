@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +24,8 @@ class User extends Authenticatable
         'role',
         'role_id',
         'shift_id',
+        'custom_start_time',
+        'custom_end_time',
         'avatar',
         'name',
         'email',
@@ -94,6 +97,20 @@ class User extends Authenticatable
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    /** Null when no shift is assigned; the shift's own range when this employee uses standard hours; a labelled custom range when overridden. */
+    public function workingHoursLabel(): ?string
+    {
+        if (! $this->shift) {
+            return null;
+        }
+
+        if ($this->custom_start_time && $this->custom_end_time) {
+            return Carbon::parse($this->custom_start_time)->format('g:i A').' – '.Carbon::parse($this->custom_end_time)->format('g:i A').' (custom)';
+        }
+
+        return $this->shift->formattedRange();
     }
 
     public function reportingManager(): BelongsTo

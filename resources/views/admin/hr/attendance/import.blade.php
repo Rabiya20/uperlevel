@@ -68,7 +68,7 @@
                             <option value="{{ $t['value'] }}" @selected(old('check_out_time') === $t['value'])>{{ $t['label'] }}</option>
                         @endforeach
                     </select>
-                    <p class="f-hint">Leave blank if the employee forgot to check out — it'll be filled in automatically once their shift ends.</p>
+                    <p class="f-hint">Leave blank if the employee forgot to check out — it'll be filled in automatically once their shift ends. If check-out is earlier than check-in (e.g. 4:00 PM in, 1:00 AM out for an overnight shift), it's treated as the next day.</p>
                 </div>
             </div>
             <div style="text-align:right;">

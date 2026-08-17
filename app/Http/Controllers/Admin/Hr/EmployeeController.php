@@ -196,6 +196,10 @@ class EmployeeController extends Controller
             ],
             'basic_salary' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'shift_id' => ['nullable', Rule::exists('shifts', 'id')->where('tenant_id', $tenantId)],
+            // Both required together — a lone override on one side would
+            // leave the other half of the range meaningless.
+            'custom_start_time' => ['nullable', 'date_format:H:i', 'required_with:custom_end_time'],
+            'custom_end_time' => ['nullable', 'date_format:H:i', 'required_with:custom_start_time'],
             'role_id' => ['nullable', Rule::exists('roles', 'id')->where('tenant_id', $tenantId)],
             'machine_name' => ['nullable', 'string', 'max:100', Rule::unique('users', 'machine_name')->ignore($ignoreId)],
         ]);
@@ -206,6 +210,13 @@ class EmployeeController extends Controller
 
         if (($data['reporting_manager_id'] ?? null) == $ignoreId) {
             $data['reporting_manager_id'] = null; // can't report to yourself
+        }
+
+        if (empty($data['shift_id'])) {
+            // A custom range only means something relative to an assigned
+            // shift — never keep one stranded without the other.
+            $data['custom_start_time'] = null;
+            $data['custom_end_time'] = null;
         }
 
         if ($data['role_id'] ?? null) {

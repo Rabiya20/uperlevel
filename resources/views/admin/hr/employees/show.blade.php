@@ -78,7 +78,7 @@
                 </div>
                 <div><div class="f-label">Employment type</div>{{ \App\Models\User::EMPLOYMENT_TYPES[$employee->employment_type] ?? '—' }}</div>
                 <div><div class="f-label">Date of joining</div>{{ optional($employee->date_of_joining)->format('j M Y') ?? '—' }}</div>
-                <div><div class="f-label">Shift</div>{{ $employee->shift->name ?? '—' }}</div>
+                <div><div class="f-label">Shift</div>{{ $employee->shift->name ?? '—' }}@if ($employee->workingHoursLabel()) <span style="color:var(--ink-soft);font-weight:400;">({{ $employee->workingHoursLabel() }})</span>@endif</div>
                 <div><div class="f-label">Reports to</div>{{ $employee->reportingManager->name ?? '—' }}</div>
                 <div><div class="f-label">Basic salary</div>{{ $employee->basic_salary !== null ? number_format($employee->basic_salary, 2) : '—' }}</div>
             </div>

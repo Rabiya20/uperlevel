@@ -37,8 +37,14 @@ class AttendanceImportController extends Controller
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('tenant_id', $tenant->id)],
             'work_date' => ['required', 'date', 'before:today'],
             'status' => ['required', 'string', 'in:present,absent'],
+            // No cross-field "after" comparison — with plain H:i strings
+            // that would compare only the clock time (no date context), so
+            // an overnight shift's check-out (e.g. 1:00 AM after a 4:00 PM
+            // check-in) would always look "earlier" and get rejected.
+            // Attendance::upsertManualEntry() rolls the check-out to the
+            // next calendar day whenever it's at or before check-in.
             'check_in_time' => ['required_if:status,present', 'nullable', 'date_format:H:i'],
-            'check_out_time' => ['nullable', 'date_format:H:i', 'after:check_in_time'],
+            'check_out_time' => ['nullable', 'date_format:H:i', 'different:check_in_time'],
         ]);
 
         $user = User::findOrFail($data['user_id']);

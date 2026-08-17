@@ -128,12 +128,25 @@
                 </div>
                 <div>
                     <label class="f-label">Shift</label>
-                    <select class="f-input" name="shift_id">
+                    <select class="f-input" name="shift_id" id="shiftSelect">
                         <option value="">No shift</option>
                         @foreach ($shifts as $shift)
-                            <option value="{{ $shift->id }}" @selected((int) $s('shift_id') === $shift->id)>{{ $shift->name }}</option>
+                            <option value="{{ $shift->id }}" @selected((int) $s('shift_id') === $shift->id)>{{ $shift->name }} ({{ $shift->formattedRange() }})</option>
                         @endforeach
                     </select>
+                </div>
+                <div style="grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div>
+                        <label class="f-label">Custom start time — optional</label>
+                        <input class="f-input" type="time" name="custom_start_time" id="customStartTime" value="{{ $s('custom_start_time') }}">
+                    </div>
+                    <div>
+                        <label class="f-label">Custom end time — optional</label>
+                        <input class="f-input" type="time" name="custom_end_time" id="customEndTime" value="{{ $s('custom_end_time') }}">
+                    </div>
+                    <div style="grid-column:1 / -1;">
+                        <p class="f-hint">Overrides the shift's standard hours for just this employee — e.g. Evening Shift but working 6 PM–1 AM instead. Leave both blank to use the shift's own hours. Fill in both, not just one.</p>
+                    </div>
                 </div>
                 <div>
                     <label class="f-label">Reports to</label>
@@ -163,9 +176,31 @@
     <button type="submit" class="btn btn-primary">Save Employee</button>
 </div>
 
+<script>
+    (function () {
+        var shiftSelect = document.getElementById('shiftSelect');
+        var customStart = document.getElementById('customStartTime');
+        var customEnd = document.getElementById('customEndTime');
+
+        function toggle() {
+            var hasShift = shiftSelect.value !== '';
+            [customStart, customEnd].forEach(function (input) {
+                input.disabled = ! hasShift;
+                if (! hasShift) {
+                    input.value = '';
+                }
+            });
+        }
+
+        shiftSelect.addEventListener('change', toggle);
+        toggle();
+    })();
+</script>
+
 <style>
     .f-label{display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em;}
     .f-input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;background:var(--bg);color:var(--ink);}
     .f-input:focus{outline:none;border-color:var(--primary);background:#fff;}
+    .f-input:disabled{background:var(--bg);color:var(--ink-soft);cursor:not-allowed;}
     .f-hint{font-size:11px;color:var(--ink-soft);margin:6px 0 0;}
 </style>

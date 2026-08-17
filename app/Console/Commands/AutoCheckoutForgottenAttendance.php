@@ -29,7 +29,7 @@ class AutoCheckoutForgottenAttendance extends Command
                 ->with('shift')
                 ->get()
                 ->each(function (Attendance $attendance) use (&$total) {
-                    $shiftEnd = $attendance->shift->endDateTimeFor($attendance->work_date);
+                    $shiftEnd = $attendance->shift->endDateTimeFor($attendance->work_date, $attendance->custom_start_time, $attendance->custom_end_time);
 
                     if (now()->greaterThanOrEqualTo($shiftEnd)) {
                         $attendance->update(['check_out' => $shiftEnd]);
