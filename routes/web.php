@@ -98,7 +98,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
         // Accounts & Finance
-        Route::prefix('finance')->name('finance.')->middleware('role:owner,admin,superadmin')->group(function () {
+        Route::prefix('finance')->name('finance.')->middleware('role:owner,admin,manager,superadmin')->group(function () {
             Route::get('/overview', [FinanceOverviewController::class, 'index'])->name('overview.index');
 
             Route::get('/setup', [FinanceSettingsController::class, 'edit'])->name('settings');

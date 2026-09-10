@@ -18,14 +18,15 @@ class EnsureModulePermission
     /**
      * Layered on top of the existing role:owner,admin,... middleware, not a
      * replacement for it. Only acts when the user has a custom Role
-     * assigned (users.role_id) — everyone else (i.e. every user today,
-     * since this is a brand new opt-in feature) passes through unaffected.
+    * assigned (users.role_id). Users without a custom role fall back to the
+    * module's base-role visibility so route groups can safely include roles
+    * that may receive access through a custom role.
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (! $user || ! $user->role_id) {
+        if (! $user) {
             return $next($request);
         }
 
@@ -43,6 +44,16 @@ class EnsureModulePermission
         $module = Module::resolveByRoute($routeName, $portal);
         if (! $module) {
             // Not mapped to any module — nothing meaningful to restrict.
+            return $next($request);
+        }
+
+        if (! $user->role_id) {
+            $baseRoles = array_map('trim', explode(',', $module->roles));
+
+            if (! in_array($user->role, $baseRoles, true)) {
+                abort(403, 'Your role does not have access to this.');
+            }
+
             return $next($request);
         }
 

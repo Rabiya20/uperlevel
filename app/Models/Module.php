@@ -178,11 +178,11 @@ class Module extends Model
     }
 
     /**
-     * Build the nav tree for a given portal + role, already filtered to the
-     * tenant's enabled modules (submodules always follow their parent's
-     * enabled state). When $customRoleId is set, this narrows the tree
-     * further to only what that role's permissions allow to be viewed —
-     * it can only ever restrict, never grant beyond the base role/tenant.
+    * Build the nav tree for a given portal + role, already filtered to the
+    * tenant's enabled modules (submodules always follow their parent's
+    * enabled state). When $customRoleId is set, the custom role's view
+    * permissions determine the visible tree; without one, the base role
+    * determines visibility.
      *
      * @return \Illuminate\Support\Collection<int, Module>
      */
@@ -191,9 +191,9 @@ class Module extends Model
         $query = static::query()
             ->forPortal($portal)
             ->topLevel()
-            ->visibleToRole($role)
+            ->when(! $customRoleId, fn ($q) => $q->visibleToRole($role))
             ->orderBy('sort_order')
-            ->with(['children' => fn ($q) => $q->visibleToRole($role)]);
+            ->with(['children' => fn ($q) => $q->when(! $customRoleId, fn ($childQuery) => $childQuery->visibleToRole($role))]);
 
         $items = $query->get();
 
