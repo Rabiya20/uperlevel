@@ -9,8 +9,6 @@ class ModuleSeeder extends Seeder
 {
     public function run(): void
     {
-        Module::query()->delete();
-
         $this->seedSuperAdmin();
         $this->seedAdminPortal();
         $this->seedEmployeePortal();
@@ -18,16 +16,17 @@ class ModuleSeeder extends Seeder
 
     protected function make(string $portal, string $key, string $name, string $roles, ?string $icon = null, ?string $route = null, int $order = 0, ?int $parentId = null): Module
     {
-        return Module::create([
-            'portal' => $portal,
-            'parent_id' => $parentId,
-            'key' => $key,
-            'name' => $name,
-            'icon' => $icon,
-            'route_name' => $route,
-            'roles' => $roles,
-            'sort_order' => $order,
-        ]);
+        return Module::updateOrCreate(
+            ['portal' => $portal, 'key' => $key],
+            [
+                'parent_id' => $parentId,
+                'name' => $name,
+                'icon' => $icon,
+                'route_name' => $route,
+                'roles' => $roles,
+                'sort_order' => $order,
+            ]
+        );
     }
 
     protected function seedSuperAdmin(): void
