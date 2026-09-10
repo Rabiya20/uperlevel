@@ -12,6 +12,12 @@ class ModuleSeeder extends Seeder
         $this->seedSuperAdmin();
         $this->seedAdminPortal();
         $this->seedEmployeePortal();
+
+        // Attendance Import is opened from the Attendance page, not the HR
+        // submodule bar. Remove the legacy row left by older seed versions.
+        Module::where('portal', 'admin')
+            ->where('key', 'hr-attendance-import')
+            ->delete();
     }
 
     protected function make(string $portal, string $key, string $name, string $roles, ?string $icon = null, ?string $route = null, int $order = 0, ?int $parentId = null): Module
@@ -75,7 +81,7 @@ class ModuleSeeder extends Seeder
             $this->make($portal, 'hr-'.str($label)->slug(), $label, $owner, null, $hrRoutes[$label] ?? null, $i, $hr->id);
         }
         $this->make($portal, 'hr-salary', 'Salary', $owner, null, 'admin.hr.salary.index', 10, $hr->id);
-        $this->make($portal, 'hr-attendance-import', 'Attendance Import', $owner, null, 'admin.hr.attendance.import.index', 7, $hr->id);
+        // $this->make($portal, 'hr-attendance-import', 'Attendance Import', $owner, null, 'admin.hr.attendance.import.index', 7, $hr->id);
         $this->make($portal, 'hr-reports', 'Reports', $owner, null, 'admin.hr.reports.index', 8, $hr->id);
         $this->make($portal, 'hr-setup', 'Setup', $owner, null, 'admin.hr.settings', 9, $hr->id);
 
