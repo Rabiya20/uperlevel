@@ -13,6 +13,7 @@
         <p>{{ $date->format('l, j F Y') }} — every team member's check-in status for the day.</p>
     </div>
     <div style="display:flex;gap:10px;">
+        <a href="{{ route('admin.hr.attendance.import.index') }}" class="btn btn-ghost" style="border-color:var(--primary);color:var(--primary-dark);">Attendance Import</a>
         <a href="{{ route('admin.hr.reports.index') }}" class="btn btn-ghost">Reports</a>
         <a href="{{ route('admin.hr.settings') }}" class="btn btn-ghost">HR Setup</a>
     </div>
