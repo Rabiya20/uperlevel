@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class Attendance extends Model
@@ -15,6 +16,7 @@ class Attendance extends Model
     public const MAX_IMPORT_ROWS = 1000;
 
     private const IMPORT_FIELD_ALIASES = [
+        'employee_id' => ['employee id', 'employee code', 'emp id', 'empid', 'emp_id'],
         'email' => ['employee email', 'email'],
         'date' => ['date', 'work date'],
         'status' => ['status'],
@@ -359,8 +361,8 @@ class Attendance extends Model
             }
         }
 
-        if (! isset($columnForField['email']) || ! isset($columnForField['date']) || ! isset($columnForField['status'])) {
-            throw new \RuntimeException('Couldn\'t find "Employee Email", "Date" and "Status" columns — download the sample template and match its headers.');
+        if ((! isset($columnForField['employee_id']) && ! isset($columnForField['email'])) || ! isset($columnForField['date']) || ! isset($columnForField['status'])) {
+            throw new \RuntimeException('Couldn\'t find "Employee ID" or "Employee Email", "Date" and "Status" columns — download the sample template and match its headers.');
         }
 
         $rows = array_slice($rows, 0, self::MAX_IMPORT_ROWS);
@@ -387,7 +389,7 @@ class Attendance extends Model
             $result = self::evaluateImportRow($data, $tenant->id);
 
             if ($result['error']) {
-                $errors[] = ['row' => $rowNumber, 'email' => $data['email'] ?? '—', 'message' => $result['error']];
+                $errors[] = ['row' => $rowNumber, 'identifier' => $data['employee_id'] ?? $data['email'] ?? '—', 'message' => $result['error']];
 
                 continue;
             }
@@ -410,20 +412,27 @@ class Attendance extends Model
     {
         $fail = fn (string $message) => ['error' => $message, 'data' => []];
 
-        if (blank($data['email'] ?? null) || ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return $fail('A valid employee email is required.');
+        $user = null;
+        if (filled($data['employee_id'] ?? null)) {
+            $user = User::where('tenant_id', $tenantId)
+                ->where('employee_code', (string) $data['employee_id'])
+                ->first();
         }
-
-        $user = User::where('tenant_id', $tenantId)->where('email', mb_strtolower($data['email']))->first();
+        if (! $user && filled($data['email'] ?? null)) {
+            if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                return $fail('Employee Email is not valid.');
+            }
+            $user = User::where('tenant_id', $tenantId)->where('email', mb_strtolower($data['email']))->first();
+        }
         if (! $user) {
-            return $fail('No employee found with this email.');
+            return $fail('No employee found with this Employee ID or email.');
         }
 
         if (blank($data['date'] ?? null)) {
             return $fail('Date is required.');
         }
         try {
-            $date = Carbon::parse($data['date'])->startOfDay();
+            $date = self::parseImportDate($data['date']);
         } catch (\Throwable $e) {
             return $fail('Date isn\'t valid.');
         }
@@ -462,6 +471,15 @@ class Attendance extends Model
         ];
     }
 
+    private static function parseImportDate(mixed $value): Carbon
+    {
+        if (is_numeric($value)) {
+            return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value))->startOfDay();
+        }
+
+        return Carbon::parse((string) $value)->startOfDay();
+    }
+
     /** The downloadable "fill this in" template — single source of truth for the column contract. */
     public static function sampleImportSpreadsheet(): Spreadsheet
     {
@@ -469,14 +487,14 @@ class Attendance extends Model
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Attendance');
 
-        $headers = ['Employee Email', 'Date', 'Status', 'Check-in Time', 'Check-out Time'];
+        $headers = ['Employee ID', 'Employee Email', 'Date', 'Status', 'Check-in Time', 'Check-out Time'];
         $sheet->fromArray($headers, null, 'A1');
-        $sheet->getStyle('A1:E1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
 
-        $sheet->fromArray(['jane@example.com', now()->subDay()->toDateString(), 'Present', '09:00 AM', '06:00 PM'], null, 'A2');
-        $sheet->fromArray(['john@example.com', now()->subDay()->toDateString(), 'Absent', '', ''], null, 'A3');
+        $sheet->fromArray(['EMP-001', 'jane@example.com', now()->subDay()->toDateString(), 'Present', '09:00 AM', '06:00 PM'], null, 'A2');
+        $sheet->fromArray(['EMP-002', 'john@example.com', now()->subDay()->toDateString(), 'Absent', '', ''], null, 'A3');
 
-        foreach (range('A', 'E') as $col) {
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

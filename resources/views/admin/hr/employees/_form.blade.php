@@ -1,6 +1,17 @@
 @php
     $s = fn ($field, $default = '') => old($field, $employee->{$field} ?? $default);
     $sDate = fn ($field) => old($field, optional($employee->{$field} ?? null)->format('Y-m-d'));
+    $sTime = function ($field) use ($employee) {
+        $value = old($field, $employee->{$field} ?? null);
+        if (! $value) {
+            return '';
+        }
+        try {
+            return \Carbon\Carbon::parse($value)->format('H:i');
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    };
 @endphp
 
 <div class="grid-2" style="align-items:start;">
@@ -138,11 +149,11 @@
                 <div style="grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                     <div>
                         <label class="f-label">Custom start time — optional</label>
-                        <input class="f-input" type="time" name="custom_start_time" id="customStartTime" value="{{ $s('custom_start_time') }}">
+                        <input class="f-input" type="time" name="custom_start_time" id="customStartTime" value="{{ $sTime('custom_start_time') }}">
                     </div>
                     <div>
                         <label class="f-label">Custom end time — optional</label>
-                        <input class="f-input" type="time" name="custom_end_time" id="customEndTime" value="{{ $s('custom_end_time') }}">
+                        <input class="f-input" type="time" name="custom_end_time" id="customEndTime" value="{{ $sTime('custom_end_time') }}">
                     </div>
                     <div style="grid-column:1 / -1;">
                         <p class="f-hint">Overrides the shift's standard hours for just this employee — e.g. Evening Shift but working 6 PM–1 AM instead. Leave both blank to use the shift's own hours. Fill in both, not just one.</p>

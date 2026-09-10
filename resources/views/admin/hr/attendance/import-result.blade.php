@@ -19,7 +19,7 @@
             @foreach ($created as $entry)
                 <tr>
                     <td>{{ $entry['row'] }}</td>
-                    <td>{{ $entry['user']->name }}</td>
+                    <td>{{ $entry['user']->name }} <span class="f-hint">({{ $entry['user']->employee_code ?? $entry['user']->email }})</span></td>
                     <td>{{ $entry['date'] }}</td>
                     <td>{{ ucfirst($entry['status']) }}</td>
                 </tr>
@@ -36,7 +36,7 @@
             @foreach ($updated as $entry)
                 <tr>
                     <td>{{ $entry['row'] }}</td>
-                    <td>{{ $entry['user']->name }}</td>
+                    <td>{{ $entry['user']->name }} <span class="f-hint">({{ $entry['user']->employee_code ?? $entry['user']->email }})</span></td>
                     <td>{{ $entry['date'] }}</td>
                     <td>{{ ucfirst($entry['status']) }}</td>
                 </tr>
@@ -50,11 +50,11 @@
     <div class="panel">
         <div class="panel-head"><h3>Skipped ({{ count($errors) }})</h3></div>
         <table>
-            <tr><th>Row</th><th>Email</th><th>Reason</th></tr>
+            <tr><th>Row</th><th>Employee ID / Email</th><th>Reason</th></tr>
             @foreach ($errors as $entry)
                 <tr>
                     <td>{{ $entry['row'] }}</td>
-                    <td>{{ $entry['email'] }}</td>
+                    <td>{{ $entry['identifier'] }}</td>
                     <td style="color:#C0392B;">{{ $entry['message'] }}</td>
                 </tr>
             @endforeach

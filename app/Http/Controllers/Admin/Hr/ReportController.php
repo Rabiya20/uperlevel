@@ -53,13 +53,13 @@ class ReportController extends Controller
         $settings = HrSettings::forTenant($tenant);
         $users = User::where('tenant_id', $tenant->id)->orderBy('name')->get();
 
-        $headers = ['Name', 'Role', 'Present', 'Late', 'Absent', 'Leave', 'Worked Hours', 'Overtime Hours'];
+        $headers = ['Name', 'Employee ID', 'Email', 'Role', 'Present', 'Late', 'Absent', 'Leave', 'Worked Hours', 'Overtime Hours'];
 
         $rows = $users->map(function (User $user) use ($start, $end, $settings) {
             $stats = Attendance::summarize(Attendance::dayStatusesFor($user, $start, $end, $settings), $settings);
 
             return [
-                $user->name, ucfirst($user->role), $stats['present'], $stats['late'],
+                $user->name, $user->employee_code ?? '—', $user->email, ucfirst($user->role), $stats['present'], $stats['late'],
                 $stats['absent'], $stats['leave'], $stats['worked_hours'], $stats['overtime_hours'],
             ];
         })->all();

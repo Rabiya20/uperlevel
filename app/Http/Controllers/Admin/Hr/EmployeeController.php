@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Hr;
 
+use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Department;
@@ -175,6 +176,16 @@ class EmployeeController extends Controller
 
     private function validated(Request $request, int $tenantId, ?int $ignoreId = null): array
     {
+        foreach (['custom_start_time', 'custom_end_time'] as $timeField) {
+            if ($request->filled($timeField)) {
+                try {
+                    $request->merge([$timeField => Carbon::parse($request->input($timeField))->format('H:i')]);
+                } catch (\Throwable $e) {
+                    // Leave invalid input untouched so the date_format rule reports it.
+                }
+            }
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($ignoreId)],

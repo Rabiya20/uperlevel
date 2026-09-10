@@ -50,7 +50,7 @@
 <div class="panel">
     <div class="panel-head"><h3>{{ $users->total() }} team member{{ $users->total() === 1 ? '' : 's' }}</h3></div>
     <table>
-        <tr><th>Name</th><th>Shift</th><th>Check In</th><th>Check Out</th><th>Worked</th><th>Status</th><th></th></tr>
+    <tr><th>Name</th><th>Employee ID</th><th>Shift</th><th>Check In</th><th>Check Out</th><th>Worked</th><th>Status</th><th></th></tr>
         @foreach ($users as $user)
             @php $att = $attendanceByUser->get($user->id); @endphp
             <tr>
@@ -58,6 +58,7 @@
                     <strong>{{ $user->name }}</strong>
                     <div style="font-size:11px;color:var(--ink-soft);text-transform:capitalize;">{{ $user->role }}</div>
                 </td>
+                <td>{{ $user->employee_code ?: '—' }}</td>
                 <td>
                     <form method="POST" action="{{ route('admin.hr.attendance.assign-shift', $user) }}">
                         @csrf

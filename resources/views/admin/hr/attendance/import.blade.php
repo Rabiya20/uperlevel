@@ -82,7 +82,7 @@
         <div style="padding:18px 20px;">
             <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">
                 Bringing in attendance history from another system? Download the template below, fill it in, and upload it here.
-                <strong>Employee Email</strong>, <strong>Date</strong> and <strong>Status</strong> are required; Check-in Time is required for a Present row, Check-out Time is optional.
+                <strong>Employee ID</strong> or <strong>Employee Email</strong>, <strong>Date</strong> and <strong>Status</strong> are required; Check-in Time is required for a Present row, Check-out Time is optional.
                 Re-uploading the same Employee + Date corrects that row rather than duplicating it.
             </p>
 

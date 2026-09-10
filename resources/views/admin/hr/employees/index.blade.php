@@ -65,13 +65,17 @@
         <div style="padding:32px 20px;text-align:center;color:var(--ink-soft);font-size:13.5px;">No employees found.</div>
     @else
         <table>
-            <tr><th>Name</th><th>Role</th><th>Department</th><th>Shift</th><th>Status</th><th></th></tr>
+            <tr><th>Photo</th><th>Name</th><th>Employee Code</th><th>Role</th><th>Department</th><th>Shift</th><th>Status</th><th></th></tr>
             @foreach ($employees as $employee)
                 <tr>
+                    <td>
+                        <img src="{{ $employee->avatar ?: 'https://i.pravatar.cc/64?u='.urlencode($employee->email) }}" alt="{{ $employee->name }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;background:#DCE6F7;display:block;">
+                    </td>
                     <td>
                         <strong>{{ $employee->name }}</strong>
                         <div style="font-size:11px;color:var(--ink-soft);">{{ $employee->email }}</div>
                     </td>
+                    <td>{{ $employee->employee_code ?: '—' }}</td>
                     <td style="text-transform:capitalize;">{{ $employee->role }}</td>
                     <td>{{ $employee->department->name ?? '—' }}</td>
                     <td>{{ $employee->shift->name ?? '—' }}</td>
