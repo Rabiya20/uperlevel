@@ -32,6 +32,7 @@
     <x-module-nav :modules="$modules" type="header" />
 
     <div class="top-actions" style="display:flex;align-items:center;gap:14px;">
+        @include('partials.workspace-widgets')
         @include('partials.notifications-dropdown')
         @include('partials.profile-dropdown')
     </div>

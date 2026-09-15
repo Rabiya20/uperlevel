@@ -93,6 +93,50 @@ button{font-family:inherit;}
 .dd-item.danger{color:var(--danger);}
 .checkin-pill{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--success-soft);border-radius:8px;margin:6px 0 8px;font-size:11.5px;font-weight:700;color:#0F7C50;}
 
+/* ============ WORKSPACE WIDGETS ============ */
+.workspace-widgets{position:relative;}
+.workspace-widgets-trigger{position:relative;}
+.workspace-widgets-trigger:hover{color:var(--primary-dark);border-color:#A8D8CC;background:var(--primary-soft);}
+.workspace-widgets-panel{position:absolute;top:47px;right:0;width:360px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 42px rgba(21,36,35,.18);padding:16px;z-index:30;}
+.workspace-widgets-heading{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px;}
+.workspace-widgets-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--primary-dark);font-weight:800;}
+.workspace-widgets-heading h2{font-size:16px;margin:3px 0 0;color:var(--ink);}
+.workspace-widgets-close{border:0;background:none;color:var(--ink-soft);font-size:22px;line-height:18px;cursor:pointer;padding:0 2px;}
+.workspace-widget-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:14px;}
+.workspace-widget-tab,.calculator-mode-btn{border:0;background:none;border-radius:6px;padding:7px 8px;color:var(--ink-soft);font-size:11.5px;font-weight:700;cursor:pointer;}
+.workspace-widget-tab.is-active,.calculator-mode-btn.is-active{background:#fff;color:var(--primary-dark);box-shadow:0 1px 3px rgba(21,36,35,.1);}
+.calculator-mode{display:flex;gap:4px;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:12px;}
+.calculator-mode-btn{padding:5px 8px;}
+.calculator-display{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;background:#F7FAF9;color:var(--ink);font-size:22px;font-weight:700;text-align:right;padding:12px;margin-bottom:10px;outline:none;}
+.calculator-display:focus,.workspace-notepad:focus,.calculator-field-grid input:focus{border-color:#75BCAF;box-shadow:0 0 0 3px rgba(30,155,138,.1);}
+.calculator-keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.calculator-keypad button{height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;}
+.calculator-keypad button:hover{background:var(--primary-soft);border-color:#A8D8CC;}
+.calculator-keypad .calculator-key-operator{color:var(--primary-dark);background:#F0F8F5;}
+.calculator-keypad .calculator-key-wide{grid-column:span 2;}
+.calculator-keypad .calculator-key-equals{background:var(--primary);border-color:var(--primary);color:#fff;}
+.calculator-hint{font-size:10.5px;line-height:1.4;color:var(--ink-soft);margin:10px 0 0;}
+.calculator-pane:not(.is-active){display:none;}
+.calculator-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.calculator-field-grid label{font-size:10.5px;font-weight:700;color:var(--ink-soft);}
+.calculator-field-grid input{display:block;width:100%;box-sizing:border-box;margin-top:4px;border:1px solid var(--line);border-radius:7px;padding:8px;font-size:12px;color:var(--ink);outline:none;}
+.salary-calculate{width:100%;border:0;border-radius:7px;background:var(--primary);color:#fff;padding:9px;margin:12px 0;font-size:11.5px;font-weight:700;cursor:pointer;}
+.salary-results{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.salary-results div{padding:9px 10px;border-bottom:1px solid var(--line);}
+.salary-results div:nth-child(odd){border-right:1px solid var(--line);}
+.salary-results div:nth-last-child(-n+2){border-bottom:0;}
+.salary-results span,.salary-results strong{display:block;}
+.salary-results span{font-size:10px;color:var(--ink-soft);}
+.salary-results strong{font-size:12px;color:var(--ink);margin-top:3px;}
+.salary-results strong.is-highlight{color:var(--primary-dark);font-size:14px;}
+.notepad-label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+.workspace-notepad{display:block;width:100%;height:224px;box-sizing:border-box;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:11px;font:12px/1.5 inherit;color:var(--ink);outline:none;}
+.notepad-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:10.5px;color:var(--ink-soft);}
+.notepad-clear{border:0;background:none;color:var(--danger);font-size:10.5px;font-weight:700;cursor:pointer;padding:0;}
+@media (max-width:560px){
+  .workspace-widgets-panel{position:fixed;top:64px;left:12px;right:12px;width:auto;max-height:calc(100vh - 80px);overflow:auto;}
+}
+
 /* ============ ADMIN PORTAL — two-tier header ============ */
 .header-1{height:64px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:10;}
 .brand-cluster{display:flex;align-items:center;gap:14px;}
