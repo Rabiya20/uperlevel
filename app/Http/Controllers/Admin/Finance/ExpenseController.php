@@ -169,6 +169,25 @@ class ExpenseController extends Controller
         return view('admin.finance.expenses.show', compact('expense'));
     }
 
+    public function document(Expense $expense, string $format): Response
+    {
+        $this->authorizeTenant($expense);
+        abort_unless(in_array($format, ['pdf', 'print'], true), 404);
+
+        $expense->load(['vendor', 'project', 'paymentAccount', 'creator', 'lines.category', 'lines.client', 'lines.project', 'lines.department']);
+        $data = compact('expense');
+
+        if ($format === 'print') {
+            return response(view('admin.finance.expenses.document', [...$data, 'mode' => 'print']));
+        }
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->loadView('admin.finance.expenses.document', [...$data, 'mode' => 'pdf']);
+
+        return $pdf->download($expense->expense_number.'-expense.pdf');
+    }
+
     public function destroy(Request $request, Expense $expense): RedirectResponse
     {
         $this->authorizeTenant($expense);

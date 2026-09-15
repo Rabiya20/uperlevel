@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Hr;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\ActivityLog;
 use App\Models\EmployeePayrollComponent;
 use App\Models\HrSettings;
 use App\Models\LeaveType;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Support\Reports\ExportsTabularReports;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -69,26 +71,41 @@ class ReportController extends Controller
 
     // ---- Employees ---------------------------------------------------------
 
-    public function employees(): View
+    public function employees(Request $request): View
     {
-        $data = $this->employeeData();
+        $data = $this->employeeData($request->boolean('archived'));
 
-        return view('admin.hr.reports.employees', $data);
+        return view('admin.hr.reports.employees', [...$data, 'archived' => $request->boolean('archived')]);
     }
 
-    public function employeesExport(string $format): Response
+    public function employeesExport(Request $request, string $format): Response
     {
-        $data = $this->employeeData();
+        $data = $this->employeeData($request->boolean('archived'));
 
-        return $this->export('Employee Report', 'All employees & managers', $data['headers'], $data['rows'], $format);
+        return $this->export('Employee Report', $request->boolean('archived') ? 'Archived employees & managers' : 'Active employees & managers', $data['headers'], $data['rows'], $format);
     }
 
-    private function employeeData(): array
+    public function archiveEmployee(User $employee): RedirectResponse
+    {
+        $tenant = $this->tenant();
+        abort_unless($employee->tenant_id === $tenant->id, 404);
+        abort_unless(in_array($employee->role, ['employee', 'manager'], true), 404);
+        abort_if($employee->is(auth()->user()), 422, 'You cannot archive your own account.');
+
+        $name = $employee->name;
+        $employee->delete();
+        ActivityLog::record('deleted', "Archived employee \"{$name}\" from the employee report.", $employee);
+
+        return redirect()->route('admin.hr.reports.employees')->with('status', $name.' was archived.');
+    }
+
+    private function employeeData(bool $archived = false): array
     {
         $tenant = $this->tenant();
 
         $users = User::where('tenant_id', $tenant->id)
             ->whereIn('role', ['employee', 'manager'])
+            ->when($archived, fn ($q) => $q->onlyTrashed(), fn ($q) => $q->withoutTrashed())
             ->with(['department', 'designation', 'shift'])
             ->orderBy('name')
             ->get();
@@ -102,7 +119,7 @@ class ReportController extends Controller
             optional($u->date_of_joining)->format('j M Y') ?? '—', $u->shift->name ?? '—',
         ])->all();
 
-        return ['headers' => $headers, 'rows' => $rows];
+        return ['headers' => $headers, 'rows' => $rows, 'rowIds' => $users->pluck('id')->all()];
     }
 
     // ---- Payroll Structure (owner/admin only, enforced at the route) ----

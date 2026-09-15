@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceController extends Controller
 {
@@ -124,6 +125,26 @@ class InvoiceController extends Controller
         $settings = FinanceSettings::forTenant($this->tenant());
 
         return view('admin.finance.invoices.show', compact('invoice', 'settings'));
+    }
+
+    public function document(Invoice $invoice, string $format): Response
+    {
+        $this->authorizeTenant($invoice);
+        abort_unless(in_array($format, ['pdf', 'print'], true), 404);
+
+        $invoice->load('client', 'creator', 'payments.receiver');
+        $settings = FinanceSettings::forTenant($this->tenant());
+        $data = compact('invoice', 'settings');
+
+        if ($format === 'print') {
+            return response(view('admin.finance.invoices.document', [...$data, 'mode' => 'print']));
+        }
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->loadView('admin.finance.invoices.document', [...$data, 'mode' => 'pdf']);
+
+        return $pdf->download($invoice->invoice_number.'-invoice.pdf');
     }
 
     public function markSent(Invoice $invoice): RedirectResponse

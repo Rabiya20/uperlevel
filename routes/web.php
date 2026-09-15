@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
             Route::resource('coa', ChartOfAccountController::class)->except(['show']);
 
             Route::resource('invoices', InvoiceController::class)->except(['edit', 'update', 'destroy']);
+            Route::get('/invoices/{invoice}/document/{format}', [InvoiceController::class, 'document'])->name('invoices.document');
             Route::post('/invoices/{invoice}/mark-sent', [InvoiceController::class, 'markSent'])->name('invoices.mark-sent');
             Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
 
@@ -121,6 +122,7 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/expenses/export/{format}', [ExpenseController::class, 'exportList'])->name('expenses.export');
             Route::resource('expenses', ExpenseController::class);
+            Route::get('/expenses/{expense}/document/{format}', [ExpenseController::class, 'document'])->name('expenses.document');
             Route::post('/expenses/{expense}/submit', [ExpenseController::class, 'submit'])->name('expenses.submit');
             Route::post('/expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{expense}/reject', [ExpenseController::class, 'reject'])->name('expenses.reject');
@@ -229,6 +231,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/employees/{employee}', [HrEmployeeController::class, 'show'])->name('employees.show');
             Route::get('/employees/{employee}/edit', [HrEmployeeController::class, 'edit'])->name('employees.edit');
             Route::put('/employees/{employee}', [HrEmployeeController::class, 'update'])->name('employees.update');
+            Route::delete('/employees/{employee}', [HrEmployeeController::class, 'destroy'])->name('employees.destroy');
             Route::post('/employees/{employee}/reset-password', [HrEmployeeController::class, 'resetPassword'])->name('employees.reset-password');
 
             // Salary data used to be owner/admin-only outright. It now follows
@@ -273,6 +276,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/attendance/export/{format}', [HrReportController::class, 'attendanceExport'])->name('attendance.export');
 
                 Route::get('/employees', [HrReportController::class, 'employees'])->name('employees');
+                Route::delete('/employees/{employee}/archive', [HrReportController::class, 'archiveEmployee'])->name('employees.archive');
                 Route::get('/employees/export/{format}', [HrReportController::class, 'employeesExport'])->name('employees.export');
 
                 Route::get('/leave', [HrReportController::class, 'leave'])->name('leave');

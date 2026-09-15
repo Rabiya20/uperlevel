@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -25,11 +26,11 @@ class EmployeeController extends Controller
     // provisioned elsewhere, not through the HR employee directory.
     private const ASSIGNABLE_ROLES = ['employee', 'manager'];
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $tenant = $this->tenant();
 
-        $employees = User::where('tenant_id', $tenant->id)
+        $employeeQuery = User::where('tenant_id', $tenant->id)
             ->whereIn('role', self::ASSIGNABLE_ROLES)
             ->with(['shift', 'department', 'designation'])
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -39,14 +40,34 @@ class EmployeeController extends Controller
                     ->orWhere('employee_code', 'like', "%{$term}%"));
             })
             ->when($request->filled('department'), fn ($q) => $q->where('department_id', $request->department))
-            ->when($request->filled('status'), fn ($q) => $q->where('employment_status', $request->status))
-            ->orderBy('name')
-            ->paginate(25)
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('employment_status', $request->status));
+
+        if ($request->boolean('datatable')) {
+            $employees = $employeeQuery->orderBy('name')
+                ->paginate(min(max((int) $request->input('per_page', 10), 1), 100))
+                ->through(fn (User $employee) => [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'email' => $employee->email,
+                    'avatar' => $employee->avatar ?: 'https://i.pravatar.cc/64?u='.urlencode($employee->email),
+                    'employee_code' => $employee->employee_code,
+                    'role' => $employee->role,
+                    'department' => $employee->department->name ?? null,
+                    'shift' => $employee->shift->name ?? null,
+                    'employment_status' => $employee->employment_status,
+                    'show_url' => route('admin.hr.employees.show', $employee),
+                    'edit_url' => route('admin.hr.employees.edit', $employee),
+                    'delete_url' => route('admin.hr.employees.destroy', $employee),
+                ]);
+
+            return response()->json($employees);
+        }
+
+        $employeeTotal = $employeeQuery->toBase()->getCountForPagination();
 
         $departments = Department::where('tenant_id', $tenant->id)->where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.hr.employees.index', compact('employees', 'departments'));
+        return view('admin.hr.employees.index', compact('employeeTotal', 'departments'));
     }
 
     public function create(): View
@@ -138,6 +159,19 @@ class EmployeeController extends Controller
         return redirect()->route('admin.hr.employees.show', $employee)
             ->with('status', 'Password reset.')
             ->with('generated_password', $password);
+    }
+
+    public function destroy(User $employee): RedirectResponse
+    {
+        $this->authorizeManageable($employee);
+        abort_if($employee->is(auth()->user()), 422, 'You cannot delete your own account.');
+
+        $name = $employee->name;
+        $employee->delete();
+
+        ActivityLog::record('deleted', "Removed employee \"{$name}\" from the directory.", $employee);
+
+        return redirect()->route('admin.hr.employees.index')->with('status', $name.' removed from the employee directory.');
     }
 
     private function tenant()

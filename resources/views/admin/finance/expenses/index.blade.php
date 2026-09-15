@@ -108,6 +108,8 @@
                         <td>
                             <div style="display:flex;gap:6px;">
                                 <a href="{{ route('admin.finance.expenses.show', $expense) }}" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">View</a>
+                                <a href="{{ route('admin.finance.expenses.document', [$expense, 'print']) }}" target="_blank" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">Print</a>
+                                <a href="{{ route('admin.finance.expenses.document', [$expense, 'pdf']) }}" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">PDF</a>
                                 @if ($expense->isEditable())
                                     <a href="{{ route('admin.finance.expenses.edit', $expense) }}" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">Edit</a>
                                 @endif

@@ -1,4 +1,4 @@
-{{-- $title, $headers, $rows (array of arrays), $exportRoute, $exportParams --}}
+{{-- $title, $headers, $rows (array of arrays), $exportRoute, $exportParams, optional $rowIds and $archiveRoute --}}
 <div class="panel">
     <div class="panel-head" style="justify-content:space-between;">
         <h3>{{ $title }} ({{ count($rows) }})</h3>
@@ -9,7 +9,7 @@
             <div class="export-dd-menu">
                 <a href="{{ route($exportRoute, array_merge($exportParams, ['format' => 'pdf'])) }}">⬇ Download PDF</a>
                 <a href="{{ route($exportRoute, array_merge($exportParams, ['format' => 'excel'])) }}">⬇ Download Excel</a>
-                <a href="{{ route($exportRoute, array_merge($exportParams, ['format' => 'print'])) }}" target="_blank">🖶 Print</a>
+                <a href="{{ route($exportRoute, array_merge($exportParams, ['format' => 'print'])) }}" target="_blank">🖶 Print / Save PDF</a>
             </div>
         </div>
     </div>
@@ -22,12 +22,24 @@
                     @foreach ($headers as $header)
                         <th>{{ $header }}</th>
                     @endforeach
+                    @if (!empty($archiveRoute))
+                        <th>Actions</th>
+                    @endif
                 </tr>
-                @foreach ($rows as $row)
+                @foreach ($rows as $rowIndex => $row)
                     <tr>
                         @foreach ($row as $cell)
                             <td>{{ $cell }}</td>
                         @endforeach
+                        @if (!empty($archiveRoute))
+                            <td>
+                                <form method="POST" action="{{ route($archiveRoute, $rowIds[$rowIndex]) }}" onsubmit="return confirm('Archive this employee? They will move to the Archive tab.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;color:#C0392B;">Archive</button>
+                                </form>
+                            </td>
+                        @endif
                     </tr>
                 @endforeach
             </table>

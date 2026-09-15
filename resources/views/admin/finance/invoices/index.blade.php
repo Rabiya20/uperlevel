@@ -72,7 +72,13 @@
                             <span class="badge-pill" style="background:#FDEEEC;color:#C0392B;">Overdue</span>
                         @endif
                     </td>
-                    <td><a href="{{ route('admin.finance.invoices.show', $invoice) }}" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">View</a></td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="{{ route('admin.finance.invoices.show', $invoice) }}" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">View</a>
+                            <a href="{{ route('admin.finance.invoices.document', [$invoice, 'print']) }}" target="_blank" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">Print</a>
+                            <a href="{{ route('admin.finance.invoices.document', [$invoice, 'pdf']) }}" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;">PDF</a>
+                        </div>
+                    </td>
                 </tr>
             @endforeach
         </table>
